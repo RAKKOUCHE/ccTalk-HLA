@@ -451,23 +451,22 @@ class Hla(HighLevelAnalyzer):
 
         Settings can be accessed using the same name used above.
         """
-        print(
-            "\nSetting : \n - Adresse périphérique : {} \n - Catégorie : {}".format(
-                self.device_address, self.device_category
-            )
-        )
+        # print(
+        #     "\nSetting : \n - Adresse périphérique : {} \n - Catégorie : {}".format(
+        #         self.device_address, self.device_category
+        #     )
+        # )
 
     def reset_frame(self):
         self.len_data = 0
         self.start_time = None
         self.data = bytes()
-        #self.isMaster2Slave = True
         return
 
     def checksum(self, length):
         result = 0
         loop = 0
-        print("\nlength {}".format(length))
+        # print("\nlength {}".format(length))
         while loop < length - 1:
             result += self.data[loop]
             loop += 1
@@ -1172,7 +1171,6 @@ class Hla(HighLevelAnalyzer):
             self.len_data += 1
 
             if self.len_data == 1:
-                # self.isRequest = True
                 self.start_time = frame.start_time
                 # Todo MCS header
                 if self.data[0] == self.device_address:  # or (self.data[0] == self.broadcast):

@@ -2,7 +2,7 @@
   "name": "HLA-ccTalk",
   "apiVersion": "1.0.0",
   "author": "Rachid AKKOUCHE",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "ccTalk High Level Analyser",
   "extensions": {
     "HLA-ccTalk": {

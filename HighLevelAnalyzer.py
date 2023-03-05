@@ -422,9 +422,9 @@ class Hla(HighLevelAnalyzer):
         label="Slave device address", min_value=2, max_value=255
     )
 
-    str_cv = "Coin validator (8 bits)"
-    str_payout = "Payout (8 bits)"
-    str_bv = "Bill acceptor (CRC 16)"
+    str_cv = "Coin validator(8 bits) "
+    str_payout = "Payout(8 bits) "
+    str_bv = "Bill acceptor(CRC 16) "
 
     device_category = ChoicesSetting(
         label="Slave device category",

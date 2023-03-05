@@ -472,8 +472,8 @@ class Hla(HighLevelAnalyzer):
             loop += 1
         return 256 - (result % 256)
 
-    def crc_16(self, data):
-        list_crc = list(data)
+    def crc_16(self):
+        list_crc = list(self.data)
         list_crc.pop(2)
         list_crc.pop()
         word_crc = 0
@@ -491,116 +491,116 @@ class Hla(HighLevelAnalyzer):
         word_crc &= 0xFFFF
         return word_crc
 
-    def param_process(self, data):
+    def param_process(self):
         str_result = "["
         position = 4
-        while position < 4 + data[1]:
-            str_result += str(data[position])
+        while position < 4 + self.data[1]:
+            str_result += str(self.data[position])
             position += 1
-            if position < 4 + data[1]:
+            if position < 4 + self.data[1]:
                 str_result += " "
         str_result += "]"
-        if data[1] > 0:
+        if self.data[1] > 0:
             str_result += "-->"
         return str_result
 
-    def get_ascii(self, data):
+    def get_ascii(self):
         i = 0
         str_id = " "
-        while i < data[1]:
-            str_id += chr(data[i + 4])
+        while i < self.data[1]:
+            str_id += chr(self.data[i + 4])
             i += 1
         return str_id
 
-    def get_int(self, data):
-        return str(data[4] + data[5] * 256 + data[6] * 65536)
+    def get_int(self):
+        return str(self.data[4] + self.data[5] * 256 + self.data[6] * 65536)
 
-    def get_dword(self, data):
-        return str(data[4] + (data[5] * 256) + (data[6] * 65536) + (data[7] * 16777216))
+    def get_dword(self):
+        return str(self.data[4] + (self.data[5] * 256) + (self.data[6] * 65536) + (self.data[7] * 16777216))
 
-    def decode_date(self, data):
-        result = data[4] + (data[5] * 256)
+    def decode_date(self):
+        result = self.data[4] + (self.data[5] * 256)
         return "{:02d}/{:02d}/+{:02d}".format(
             result & 31, (result >> 5) & 15, (result >> 9) & 31
         )
 
-    def decode_buffer_cv(self, data):
-        str_events = "# Events {} ".format(data[4])
+    def decode_buffer_cv(self):
+        str_events = "# Events {} ".format(self.data[4])
         i = 0
         str_result = ""
         while i < 5:
             str_result += " - Result {} : ".format(i + 1)
-            if data[5 + (i * 2)] > 0:
+            if self.data[5 + (i * 2)] > 0:
                 # Coin accepted
                 str_result += "Coin {} Sort. {}".format(
-                    data[5 + (i * 2)], data[6 + (i * 2)]
+                    self.data[5 + (i * 2)], self.data[6 + (i * 2)]
                 )
             else:
                 # Erreur
-                str_result += "Err. #{} ".format(data[6 + (i * 2)])
+                str_result += "Err. #{} ".format(self.data[6 + (i * 2)])
                 # Erreur inhibited
-                if (data[6 + (i * 2)] > 127) and (data[6 + (i * 2)] < 160):
-                    str_result += "Inhibited ch. {}", (data[6 + (i * 2)] - 127)
+                if (self.data[6 + (i * 2)] > 127) and (self.data[6 + (i * 2)] < 160):
+                    str_result += "Inhibited ch. {}", (self.data[6 + (i * 2)] - 127)
                     # Erreur reserved
-                elif (data[6 + (i * 2)] > 159) and (data[6 + (i * 2)] < 191):
+                elif (self.data[6 + (i * 2)] > 159) and (self.data[6 + (i * 2)] < 191):
                     str_result += " Err. #{} Reserved".format(
-                        data[6 + (i * 2)])
+                        self.data[6 + (i * 2)])
                     # Erreur
-                elif data[6 + (i * 2)] < 41:
+                elif self.data[6 + (i * 2)] < 41:
                     str_result += "{} ".format(
-                        self.CV_Error_Code[data[6 + (i * 2)]])
+                        self.CV_Error_Code[self.data[6 + (i * 2)]])
                 else:
                     str_result += "not identified"
             i += 1
         return str_events + str_result
 
-    def decode_buffer_bill(self, data):
-        str_events = "# Events {} ".format(data[4])
+    def decode_buffer_bill(self):
+        str_events = "# Events {} ".format(self.data[4])
         i = 0
         str_result = ""
         while i < 5:
             str_result += " - Result {} : ".format(i + 1)
-            if data[5 + (i * 2)] > 0:
+            if self.data[5 + (i * 2)] > 0:
                 # bill accepted
-                if data[6 + (i * 2)] == 1:
-                    str_result += "Bill {} in escrow".format(data[5 + (i * 2)])
+                if self.data[6 + (i * 2)] == 1:
+                    str_result += "Bill {} in escrow".format(self.data[5 + (i * 2)])
                 else:
                     str_result += "Bill {} in cashbox".format(
-                        data[5 + (i * 2)])
+                        self.data[5 + (i * 2)])
             else:
-                if data[6 + (i * 2)] < 22:
+                if self.data[6 + (i * 2)] < 22:
                     str_result += "Code : {}".format(
-                        self.BILL_Error_Code[data[6 + (i * 2)]]
+                        self.BILL_Error_Code[self.data[6 + (i * 2)]]
                     )
                 else:
-                    str_result += "Code : {} inconnu".format(data[6 + (i * 2)])
+                    str_result += "Code : {} inconnu".format(self.data[6 + (i * 2)])
             i += 1
         return str_events + str_result
 
-    def master2slave(self, data):
+    def master2slave(self):
         # Request
         if ((self.cc_Header == 240) or
                 (self.cc_Header == 239) or
                 (self.cc_Header == 238) or
                 (self.cc_Header == 233) or
                 (self.cc_Header == 222)):
-            return "Mask [" + bin(data[4])[2:].rjust(8, "0") + "]"
+            return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]"
         elif self.cc_Header == 231:
             return (
                     "Mask ["
-                    + bin(data[5])[2:].rjust(8, "0")
+                    + bin(self.data[5])[2:].rjust(8, "0")
                     + "|"
-                    + bin(data[4])[2:].rjust(8, "0")
+                    + bin(self.data[4])[2:].rjust(8, "0")
                     + "]"
             )
         elif self.cc_Header == 228:
             str_result = "Master inh. "
-            if (data[4]) & 1 == 1:
+            if (self.data[4]) & 1 == 1:
                 return str_result + "enabled"
             else:
                 return str_result + "disabled"
         elif (self.cc_Header == 219) or (self.cc_Header == 218):
-            if data[4] > 47:
+            if self.data[4] > 47:
                 str_pin = "Pin [{:c}][{:c}][{:c}][{:c}]"
             else:
                 str_pin = "Pin [{}][{}][{}][{}]"
@@ -608,70 +608,69 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 215:
             return "Blk. no. [{}]".format(self.data[4])
         elif self.cc_Header == 214:
-            str_result = "Blk. no. {} values [ ".format(data[4])
+            str_result = "Blk. no. {} values [ ".format(self.data[4])
             i = 0
-            while i < (data[1] - 1):
-                str_result += "{} ".format(data[5 + i])
+            while i < (self.data[1] - 1):
+                str_result += "{} ".format(self.data[5 + i])
                 i += 1
             str_result += "]"
             return str_result
         elif self.cc_Header == 211:
             power_option = ["normal", "switch to low",
                             "switch to full", "shutdown"]
-            return "P. opt. {}".format(power_option[data[4]])
+            return "P. opt. {}".format(power_option[self.data[4]])
         elif self.cc_Header == 210:
-            str_result = "Coin pos.{} Path_1 {} ".format(data[4], data[5])
-            if (data[1]) == 5:
-                str_result += f"Path_2 {data[6]} Path_3 {data[7]} Path_4 {data[8]}"
+            str_result = "Coin pos.{} Path_1 {} ".format(self.data[4], self.data[5])
+            if (self.data[1]) == 5:
+                str_result += f"Path_2 {self.data[6]} Path_3 {self.data[7]} Path_4 {self.data[8]}"
             return str_result
         elif self.cc_Header == 209:
-            return "Coin pos. {}".format(data[4])
+            return "Coin pos. {}".format(self.data[4])
         elif self.cc_Header == 204:
             str_meter = ["Set", "Inc", "Dec", "Reset", "Read"]
-            str_result = str_meter[data[4]]
-            if data[1] == 0:
-                str_result += str.format(data[5] +
-                                         data[6] * 256 + data[7] * 65536)
+            str_result = str_meter[self.data[4]]
+            if self.data[1] == 0:
+                str_result += " {} ".format(self.data[5] + self.data[6] * 256 + self.data[7] * 65536)
             return str_result
-        elif (self.cc_Header == 217) and (data[1] == 1):
-            return "Hopper no. {}".format(data[4])
+        elif (self.cc_Header == 217) and (self.data[1] == 1):
+            return "Hopper no. {}".format(self.data[4])
         elif self.cc_Header == 208:
-            if data[1] == 2:
-                return "Coins {}".format(data[4] + (data[5] * 256))
-            elif data[1] == 3:
-                return "Hopper {} - Coins {}".format(data[4], data[5] + data[6] + 256)
+            if self.data[1] == 2:
+                return "Coins {}".format(self.data[4] + (self.data[5] * 256))
+            elif self.data[1] == 3:
+                return "Hopper {} - Coins {}".format(self.data[4], self.data[5] + self.data[6] + 256)
             else:
                 return ""
-        elif (self.cc_Header == 207) and (data[1] == 1):
-            return "Hopper {}".format(data[4])
+        elif (self.cc_Header == 207) and (self.data[1] == 1):
+            return "Hopper {}".format(self.data[4])
         elif self.cc_Header == 202:
             str_result = "Pos. {}".format(self.data[4])
-            if data[1] == 2:
-                str_result += "Orienta. {}".format(self.data[data[5]])
+            if self.data[1] == 2:
+                str_result += "Orienta. {}".format(self.data[5])
             return str_result
         elif self.cc_Header == 201:
-            if data[4] == 0:
+            if self.data[4] == 0:
                 str_result = "Default "
             else:
                 str_result = "Abort "
             return str_result
         elif self.cc_Header == 189:
-            return "Def. path {}".format(data[4])
+            return "Def. path {}".format(self.data[4])
         elif self.cc_Header == 187:
-            if data[1] == 2:
-                return "Capacity {}".format(data[4] + (data[5] * 256))
+            if self.data[1] == 2:
+                return "Capacity {}".format(self.data[4] + (self.data[5] * 256))
             else:
                 return "Hopper no. {} Capacity {}".format(
-                    data[4], data[5] + (data[6] * 256)
+                    self.data[4], self.data[5] + (self.data[6] * 256)
                 )
         elif self.cc_Header == 186:
-            if data[1] == 1:
-                return "Hopper no. {}".format(data[4])
+            if self.data[1] == 1:
+                return "Hopper no. {}".format(self.data[4])
             else:
                 return ""
         elif self.cc_Header == 185:
             return (
-                    "Coin pos. {} Id.".format(data[4])
+                    "Coin pos. {} Id.".format(self.data[4])
                     + chr(self.data[5])
                     + chr(self.data[6])
                     + "_"
@@ -682,80 +681,82 @@ class Hla(HighLevelAnalyzer):
                     + chr(self.data[10])
             )
         elif self.cc_Header == 184:
-            return "Pos. {}".format(data[4])
+            return "Pos. {}".format(self.data[4])
         elif self.cc_Header == 183:
             str_result = "Pos. {} Cmd {} ".format(
-                data[5], self.up_window_data[data[4]])
-            if (data[4] == 0) or (data[4] == 3):
+                self.data[5], self.up_window_data[self.data[4]])
+            if (self.data[4] == 0) or (self.data[4] == 3):
                 str_result += " var."
                 i = 0
-                while i < data[1]:
-                    str_result += " {}".format(data[6] + i)
+                while i < self.data[1]:
+                    str_result += " {}".format(self.data[6] + i)
                     i += 1
-            elif data[4] == 1:
-                str_result += " Credit code {}".format(data[6])
+            elif self.data[4] == 1:
+                str_result += " Credit code {}".format(self.data[6])
             return str_result
         elif self.cc_Header == 181:
-            return "Pos. {} setting {}".format(data[4], data[5])
+            return "Pos. {} setting {}".format(self.data[4], self.data[5])
         elif self.cc_Header == 180:
-            return "Pos. {}".format(data[4])
+            return "Pos. {}".format(self.data[4])
         elif self.cc_Header == 179:
-            return "Bank select ".format(data[4])
+            return "Bank select ".format(self.data[4])
         elif self.cc_Header == 175:
-            if data[1] == 2:
-                return "No. coins {} ".format(data[4] + (data[5] * 256))
-            elif data[1] == 3:
+            if self.data[1] == 2:
+                return "No. coins {} ".format(self.data[4] + (self.data[5] * 256))
+            elif self.data[1] == 3:
                 return "Hopper {} No. coins {} ".format(
-                    data[4], data[5] + (data[6] * 256)
+                    self.data[4], self.data[5] + (self.data[6] * 256)
                 )
             else:
                 return ""
         elif self.cc_Header == 174:
-            if data[1] == 1:
-                return "Hopper {}".format(data[4])
+            if self.data[1] == 1:
+                return "Hopper {}".format(self.data[4])
             else:
                 return ""
         elif self.cc_Header == 167:
             str_result = "Security code "
             i = 0
-            while i < (data[1] - 1):
-                str_result += " {}".format(data[4 + i])
+            while i < (self.data[1] - 1):
+                str_result += " {}".format(self.data[4 + i])
                 i += 1
-            str_result += " No. of coins {}".format(data[4 + i])
+            str_result += " No. of coins {}".format(self.data[4 + i])
             return str_result
         elif self.cc_Header == 164:
             str_result = "Payout {}"
-            if data[4] == 165:
+            if self.data[4] == 165:
                 return str_result.format("enable")
             else:
                 return str_result.format("disable")
         elif self.cc_Header == 162:
             return (
                     " Current (Mask 1 ["
-                    + bin(data[4])[2:].rjust(8, "0")
+                    + bin(self.data[4])[2:].rjust(8, "0")
                     + "] Mask 2 ["
-                    + bin(data[5])[2:].rjust(8, "0")
+                    + bin(self.data[5])[2:].rjust(8, "0")
                     + "] Override mask ["
-                    + bin(data[6])[2:].rjust(8, "0")
+                    + bin(self.data[6])[2:].rjust(8, "0")
                     + "])"
                     + " Next (Mask 1 ["
-                    + bin(data[7])[2:].rjust(8, "0")
+                    + bin(self.data[7])[2:].rjust(8, "0")
                     + "] Mask 2 ["
-                    + bin(data[8])[2:].rjust(8, "0")
+                    + bin(self.data[8])[2:].rjust(8, "0")
                     + "] Override mask ["
-                    + bin(data[9])[2:].rjust(8, "0")
+                    + bin(self.data[9])[2:].rjust(8, "0")
                     + "])"
             )
         elif self.cc_Header == 161:
             str_result = "RNG : "
             i = 0
-            while i < data[1]:
-                str_result += " {}".format(data[4 + i])
+            while i < self.data[1]:
+                str_result += " {}".format(self.data[4 + i])
                 i += 1
             return str_result
+        elif self.cc_Header == 159:
+            return self.decode_buffer_bill()
         elif self.cc_Header == 158:
             return (
-                    "Bill. type {} Id.".format(data[4])
+                    "Bill. type {} Id.".format(self.data[4])
                     + chr(self.data[5])
                     + chr(self.data[6])
                     + "_"
@@ -767,159 +768,163 @@ class Hla(HighLevelAnalyzer):
                     + chr(self.data[11])
             )
         elif self.cc_Header == 157:
-            return "Bill type {}".format(data[4])
+            return "Bill type {}".format(self.data[4])
         elif (self.cc_Header == 156) or (self.cc_Header == 155):
             return "Country {:c}{:c}".format(self.data[4], self.data[5])
         elif self.cc_Header == 154:
-            return self.route_code[data[4]]
+            return self.route_code[self.data[4]]
         elif self.cc_Header == 153:
             str_result = " Stacker "
-            if data[4] & 1:
+            if self.data[4] & 1:
                 str_result += "used"
             else:
                 str_result += "non used"
             str_result += " Escrow "
-            if data[4] & 2:
+            if self.data[4] & 2:
                 str_result += "used "
             else:
                 str_result += "non used"
             return str_result
         elif self.cc_Header == 151:
-            if data[5] < 3:
-                return " Lamp {} control {}".format(data[4], self.lamp_control[data[5]])
-            elif data[5] > 9:
-                return " Lamp {} flash every {} ms".format(data[4], data[5] * 20)
+            if self.data[5] < 3:
+                return " Lamp {} control {}".format(self.data[4], self.lamp_control[self.data[5]])
+            elif self.data[5] > 9:
+                return " Lamp {} flash every {} ms".format(self.data[4], self.data[5] * 20)
             else:
                 return ""
         elif self.cc_Header == 150:
-            return " Pos. {}".format(data[4])
+            return " Pos. {}".format(self.data[4])
         elif self.cc_Header == 149:
-            return " Error type {}".format(data[4])
+            return " Error type {}".format(self.data[4])
         elif self.cc_Header == 146:
-            return "Motor mask [" + bin(data[4])[2:].rjust(8, "0") + "]" + \
-                "Direction mask [" + bin(data[5])[2:].rjust(
-                    8, "0") + "]" + "Speed " + str(data[6])
-        elif (self.cc_Header == 145) and (data[1] == 2):
+            return "Motor mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]" + \
+                "Direction mask [" + bin(self.data[5])[2:].rjust(
+                    8, "0") + "]" + "Speed " + str(self.data[6])
+        elif (self.cc_Header == 145) and (self.data[1] == 2):
             return "Country {:c}{:c}".format(self.data[4], self.data[5])
         elif (self.cc_Header == 144) or (self.cc_Header == 140):
-            str_result = "Block {} line {}".format(data[4], data[5])
+            str_result = "Block {} line {}".format(self.data[4], self.data[5])
             i = 0
-            while i < data[1] - 2:
-                str_result += " {}".format(data[6] + i)
+            while i < self.data[1] - 2:
+                str_result += " {}".format(self.data[6] + i)
                 i += 1
             return str_result
-        elif ((self.cc_Header == 141) or (self.cc_Header == 139)) and (data[1] == 1):
-            return "Module {} ".format(data[4])
+        elif ((self.cc_Header == 141) or (self.cc_Header == 139)) and (self.data[1] == 1):
+            return "Module {} ".format(self.data[4])
         elif self.cc_Header == 137:
-            return "Code [0X{}{}] [0X{}{}] [0X{}{}]".format(data[5], data[4], data[7], data[8], data[9], data[8])
+            return "Code [0X{}{}] [0X{}{}] [0X{}{}]".format(self.data[5], self.data[4], self.data[7], self.data[8],
+                                                            self.data[9], self.data[8])
         elif self.cc_Header == 135:
-            return "no. coins {}".format(data[4])
+            return "no. coins {}".format(self.data[4])
         elif self.cc_Header == 134:
-            return "Code [0X{}{}] [0X{}{}] [0X{}{}] no. of coins {}".format(data[5], data[4], data[7], data[6], data[9],
-                                                                            data[8], data[10] + (data[11] * 256))
+            return "Code [0X{}{}] [0X{}{}] [0X{}{}] no. of coins {}".format(self.data[5], self.data[4], self.data[7],
+                                                                            self.data[6], self.data[9],
+                                                                            self.data[8],
+                                                                            self.data[10] + (self.data[11] * 256))
         elif (self.cc_Header == 131) or (self.cc_Header == 130):
-            return "No coin {}".format(data[4])
+            return "No coin {}".format(self.data[4])
         elif self.cc_Header == - 125:
-            return "To pay " + self.get_dword(data)
+            return "To pay " + self.get_dword()
         elif self.cc_Header == 121:
-            return "Hopper {} no {}".format(data[4], data[5])
+            return "Hopper {} no {}".format(self.data[4], self.data[5])
         elif self.cc_Header == 120:
-            return "Hopper {} no {}".format(data[4], (data[5] + (data[6] * 256)))
+            return "Hopper {} no {}".format(self.data[4], (self.data[5] + (self.data[6] * 256)))
         elif self.cc_Header == 119:
-            return "Hopper ".format(data[4])
+            return "Hopper ".format(self.data[4])
         elif self.cc_Header == 118:
-            return "Cash box value " + self.get_dword(data)
+            return "Cash box value " + self.get_dword()
         elif self.cc_Header == 116:
             return str(
-                datetime.datetime.fromtimestamp(data[4] + (data[5] * 256) + (data[6] * 65536) + (data[7] * 16777216)))
+                datetime.datetime.fromtimestamp(
+                    self.data[4] + (self.data[5] * 256) + (self.data[6] * 65536) + (self.data[7] * 16777216)))
         elif self.cc_Header == 113:
-            return "Op. {} {}".format(self.baud_rate_OP[data[4]], self.baud_rate_code[data[5]])
+            return "Op. {} {}".format(self.baud_rate_OP[self.data[4]], self.baud_rate_code[self.data[5]])
         elif self.cc_Header == 107:
-            if data[4] == 0:
+            if self.data[4] == 0:
                 "Accept"
             else:
                 "Return"
         elif self.cc_Header == 104:
-            if data[4] == 0:
+            if self.data[4] == 0:
                 return "Report service status"
             else:
                 return "Clear service status"
         else:
             return ""
 
-    def slave2master(self, data):
+    def slave2master(self):
         # Answer
         if self.cc_Header == 253:
-            return str(data[4])
+            return str(self.data[4])
         elif self.cc_Header == 249:
-            if data[4] == 0:
+            if self.data[4] == 0:
                 return "Special case"
-            elif data[4] == 1:
-                return "{}ms".format(data[5])
-            elif data[4] == 2:
-                return "{}ms".format(data[5] * 10)
-            elif data[4] == 3:
+            elif self.data[4] == 1:
+                return "{}ms".format(self.data[5])
+            elif self.data[4] == 2:
+                return "{}ms".format(self.data[5] * 10)
+            elif self.data[4] == 3:
                 return "{}s".format(self.data[5])
-            elif data[4] == 4:
+            elif self.data[4] == 4:
                 return "{}m".format(self.data[5])
-            elif data[4] == 5:
+            elif self.data[4] == 5:
                 return "{}h".format(self.data[5])
-            elif data[4] == 6:
+            elif self.data[4] == 6:
                 return "{}d".format(self.data[5])
-            elif data[4] == 7:
+            elif self.data[4] == 7:
                 return "{}w".format(self.data[5])
-            elif data[4] == 8:
+            elif self.data[4] == 8:
                 return "{}M".format(self.data[5])
-            elif data[4] == 9:
+            elif self.data[4] == 9:
                 return "{}Y".format(self.data[5])
             else:
                 return "Inderteminated"
         elif self.cc_Header == 248:
-            if data[4] == 0:
+            if self.data[4] == 0:
                 return "Status OK"
-            elif data[4] == 1:
+            elif self.data[4] == 1:
                 return "Return activated"
-            elif data[4] == 1:
+            elif self.data[4] == 1:
                 return "C.O.S activated"
         elif ((self.cc_Header == 246) or
               (self.cc_Header == 245) or
               (self.cc_Header == 244) or
               (self.cc_Header == 241) or
               (self.cc_Header == 171) or
-              ((self.cc_Header == 129) and (data[1] > 0)) or
+              ((self.cc_Header == 129) and (self.data[1] > 0)) or
               (self.cc_Header == 145)):
-            return self.get_ascii(data)
+            return self.get_ascii()
         elif self.cc_Header == 243:
-            return "Data base {}".format(data[4])
+            return "Data base {}".format(self.data[4])
         elif self.cc_Header == 242:
-            return "S.N. " + self.get_int(data)
+            return "S.N. " + self.get_int()
         elif (
                 (self.cc_Header == 237)
                 or (self.cc_Header == 236)
                 or (self.cc_Header == 221)
                 or (self.cc_Header == 217)
         ):
-            return "Mask [" + bin(data[4])[2:].rjust(8, "0") + "]"
+            return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]"
         elif (self.cc_Header == 230) or (self.cc_Header == 212):
             return (
                     "Mask ["
-                    + bin(data[5])[2:].rjust(8, "0")
+                    + bin(self.data[5])[2:].rjust(8, "0")
                     + "|"
-                    + bin(data[4])[2:].rjust(8, "0")
+                    + bin(self.data[4])[2:].rjust(8, "0")
                     + "]"
             )
         elif self.cc_Header == 229:  # or (self.cc_Header == 159):
-            return self.decode_buffer_cv(data)
+            return self.decode_buffer_cv()
         elif self.cc_Header == 227:
             str_result = "Master inh. "
-            if (data[4]) & 1 == 1:
+            if (self.data[4]) & 1 == 1:
                 return str_result + "enabled"
             else:
                 return str_result + "disabled"
         elif self.cc_Header == 226:
-            return "Insert counter " + self.get_int(data)
+            return "Insert counter " + self.get_int()
         elif (self.cc_Header == 225) or (self.cc_Header == 150):
-            return "Accept counter " + self.get_int(data)
+            return "Accept counter " + self.get_int()
         elif self.cc_Header == 216:
             str_result = [
                 "vola. L.O.R",
@@ -927,15 +932,15 @@ class Hla(HighLevelAnalyzer):
                 "perm. limited",
                 "perm. unlimited",
             ]
-            return str_result[data[4]] + \
+            return str_result[self.data[4]] + \
                 ", [rd blocks {} | rd bytes/block {}], [wr blocks {} | wr bytes/block {}]".format(
-                    data[5], data[6], data[7], data[8]
+                    self.data[5], self.data[6], self.data[7], self.data[8]
                 )
         elif self.cc_Header == 215:
             i = 0
             str_result = "[ "
-            while i < data[1]:
-                str_result += "{} ".format(data[i + 4])
+            while i < self.data[1]:
+                str_result += "{} ".format(self.data[i + 4])
                 i += 1
             return str_result + "]"
         elif self.cc_Header == 213:
@@ -944,214 +949,220 @@ class Hla(HighLevelAnalyzer):
                     0: "Coin pos.",
                     1: "CVF",
                 }
-                return "Code format {}".format(code_format[data[4] & 1])
+                return "Code format {}".format(code_format[self.data[4] & 1])
             else:
-                return "Mask [" + data[4][2:].rjust(8, "0") + "]"
+                return "Mask [" + self.data[4][2:].rjust(8, "0") + "]"
         elif self.cc_Header == 209:
-            str_result = "Path 1 {}".format(data[4])
-            if data[1] == 4:
+            str_result = "Path 1 {}".format(self.data[4])
+            if self.data[1] == 4:
                 str_result += "Path 2 {} Path 3 {} Path 4 {}".format(
-                    data[5], data[6], data[7]
+                    self.data[5], self.data[6], self.data[7]
                 )
             return str_result
         elif self.cc_Header == 232:
-            str_result = "fault {}".format(self.fault_code[data[4]])
-            if data[1] == 2:
-                str_result += " info {}".format(self.extra_info[data[5]])
+            str_result = "fault {}".format(self.fault_code[self.data[4]])
+            if self.data[1] == 2:
+                str_result += " info {}".format(self.extra_info[self.data[5]])
             return str_result
         elif self.cc_Header == 207:
-            return "Coins {}".format(data[4] + data[5] * 256)
+            return "Coins {}".format(self.data[4] + self.data[5] * 256)
         elif self.cc_Header == 204:
-            return "Meter " + self.get_int(data)
+            return "Meter " + self.get_int()
         elif self.cc_Header == 201:
             return "# coins {} status {}".format(
-                data[4], self.teach_status_code[data[5]]
+                self.data[4], self.teach_status_code[self.data[5]]
             )
         elif self.cc_Header == 197:
             return "Chk 1 {} Chk 2 {} Chk 3 {} Chk {}".format(
-                data[4], data[5], data[6], data[7]
+                self.data[4], self.data[5], self.data[6], self.data[7]
             )
         elif (self.cc_Header == 196) or (self.cc_Header == 195):
-            return self.decode_date(data)
+            return self.decode_date()
         elif self.cc_Header == 194:
-            return "Rej. counter " + self.get_int(data)
+            return "Rej. counter " + self.get_int()
         elif self.cc_Header == 193:
-            return "Fraud. counter " + self.get_int(data)
+            return "Fraud. counter " + self.get_int()
         elif self.cc_Header == 192:
-            return "Build " + self.get_ascii(data)
+            return "Build " + self.get_ascii()
         elif self.cc_Header == 188:
-            return "Def. path {}".format(data[4])
+            return "Def. path {}".format(self.data[4])
         elif self.cc_Header == 186:
-            return "No. coins {}".format(data[4] + (data[5] * 256))
+            return "No. coins {}".format(self.data[4] + (self.data[5] * 256))
         elif self.cc_Header == 184:
             return (
                     "Id . "
-                    + chr(data[4])
-                    + chr(data[5])
+                    + chr(self.data[4])
+                    + chr(self.data[5])
                     + "_"
-                    + chr(data[6])
-                    + chr(data[7])
-                    + chr(data[8])
+                    + chr(self.data[6])
+                    + chr(self.data[7])
+                    + chr(self.data[8])
                     + "_"
-                    + chr(data[9])
+                    + chr(self.data[9])
             )
         elif self.cc_Header == 182:
             str_result = "Calib. info "
             i = 0
-            while i < data[1]:
-                str_result += " {}".format(data[4] + i)
+            while i < self.data[1]:
+                str_result += " {}".format(self.data[4] + i)
                 i += 1
             return str_result
         elif self.cc_Header == 180:
-            return "Setting ".format(data[4])
+            return "Setting ".format(self.data[4])
         elif self.cc_Header == 178:
-            return "Bank select ".format(data[4])
+            return "Bank select ".format(self.data[4])
         elif self.cc_Header == 176:
-            return "Alarm counter {}".format(data[4])
+            return "Alarm counter {}".format(self.data[4])
         elif self.cc_Header == 174:
-            return "No. coins {} ".format(data[4] + data[5] * 256)
+            return "No. coins {} ".format(self.data[4] + self.data[5] * 256)
         elif self.cc_Header == 173:
             str_result = "Temp. "
-            if (data[4] and 128) == 128:
-                return str_result + "-".format(data[4])
+            if (self.data[4] and 128) == 128:
+                return str_result + "-".format(self.data[4])
             else:
-                return str_result.format(data[4])
+                return str_result.format(self.data[4])
         elif self.cc_Header == 172:
-            return " Remaining ".format(data[4])
+            return " Remaining ".format(self.data[4])
         elif self.cc_Header == 170:
             return "Base year {}{}{}{}".format(
-                chr(data[4]), chr(data[5]), chr(data[6]), chr(data[7])
+                chr(self.data[4]), chr(self.data[5]), chr(self.data[6]), chr(self.data[7])
             )
         elif self.cc_Header == 169:
-            return "Mask [" + bin(data[4])[2:].rjust(8, "0") + "]"
+            return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]"
         elif self.cc_Header == 168:
-            return self.get_int(data)
+            return self.get_int()
         elif self.cc_Header == 167:
-            if (data[1]) == 1:
-                return "Event count. {}".format(data[4])
+            if (self.data[1]) == 1:
+                return "Event count. {}".format(self.data[4])
             else:
                 return ""
         elif self.cc_Header == 166:
             return "Events {} Remaining {} Last paid {} Last unpaid {} ".format(
-                data[4], data[5], data[6], data[7]
+                self.data[4], self.data[5], self.data[6], self.data[7]
             )
         elif self.cc_Header == 163:
             str_result = ""
             i = 0
-            while i < data[1]:
-                str_result += "Mask {} ".format(i + 1) + "[" + bin(data[4 + i])[2:].rjust(8, "0") + "] "
+            while i < self.data[1]:
+                str_result += "Mask {} ".format(i + 1) + "[" + bin(self.data[4 + i])[2:].rjust(8, "0") + "] "
                 i += 1
             return str_result
         elif self.cc_Header == 160:
             str_result = "KEY : "
             i = 0
-            while i < data[1]:
-                str_result += " {}".format(data[4 + i])
+            while i < self.data[1]:
+                str_result += " {}".format(self.data[4 + i])
                 i += 1
             return str_result
         elif self.cc_Header == 157:
             return (
                     "Id . "
-                    + chr(data[4])
-                    + chr(data[5])
+                    + chr(self.data[4])
+                    + chr(self.data[5])
                     + "_"
-                    + chr(data[6])
-                    + chr(data[7])
-                    + chr(data[8])
-                    + chr(data[9])
+                    + chr(self.data[6])
+                    + chr(self.data[7])
+                    + chr(self.data[8])
+                    + chr(self.data[9])
                     + "_"
-                    + chr(data[10])
+                    + chr(self.data[10])
             )
         elif self.cc_Header == 156:
             return "Scaling factor {} decimal {}".format(
-                data[4] + data[5] * 256, data[6]
+                self.data[4] + self.data[5] * 256, self.data[6]
             )
         elif self.cc_Header == 155:
             return (
                     "Mask ["
-                    + bin(data[5])[2:].rjust(8, "0")
+                    + bin(self.data[5])[2:].rjust(8, "0")
                     + "|"
-                    + bin(data[4])[2:].rjust(8, "0")
+                    + bin(self.data[4])[2:].rjust(8, "0")
                     + "]"
             )
         elif self.cc_Header == 154:
-            return self.error_code[data[4]]
+            return self.error_code[self.data[4]]
         elif self.cc_Header == 152:
             str_result = " Stacker "
-            if data[4] & 1:
+            if self.data[4] & 1:
                 str_result += "used"
             else:
                 str_result += "non used"
             str_result += " Escrow "
-            if data[4] & 2:
+            if self.data[4] & 2:
                 str_result += "used "
             else:
                 str_result += "non used"
             return str_result
         elif self.cc_Header == 149:
-            return " Error counter : " + self.get_int(data)
+            return " Error counter : " + self.get_int()
         elif self.cc_Header == 148:
             str_result = "Opto voltages {}"
-            if data[1] == 1:
-                return str_result.format(data[4])
+            if self.data[1] == 1:
+                return str_result.format(self.data[4])
             else:
-                return str_result.format(data[4] + (data[5] * 256))
+                return str_result.format(self.data[4] + (self.data[5] * 256))
         elif self.cc_Header == 147:
-            if data[1] == 1:
-                return "Error {}".format(self.error_code_stacker[data[4]])
+            if self.data[1] == 1:
+                return "Error {}".format(self.error_code_stacker[self.data[4]])
             else:
                 return ""
         elif self.cc_Header == 141:
-            return "FW option {}".format(data[4])
-        elif (self.cc_Header == 134) and (data[1] == 1):
-            return "Events {}".format(data[4])
+            return "FW option {}".format(self.data[4])
+        elif (self.cc_Header == 134) and (self.data[1] == 1):
+            return "Events {}".format(self.data[4])
         elif self.cc_Header == 133:
-            return "Events {} remain. {} paid {} unpaid {}".format(data[4], (data[5] + (data[6] * 256)),
-                                                                   (data[7] + (data[8] * 256)),
-                                                                   (data[9] + (data[10] * 256)))
+            return "Events {} remain. {} paid {} unpaid {}".format(self.data[4], (self.data[5] + (self.data[6] * 256)),
+                                                                   (self.data[7] + (self.data[8] * 256)),
+                                                                   (self.data[9] + (self.data[10] * 256)))
         elif self.cc_Header == 132:
-            return "remain. {}".format(data[4] + data[5] * 256)
+            return "remain. {}".format(self.data[4] + self.data[5] * 256)
         elif (self.cc_Header == 131) or (self.cc_Header == 119):
-            return "Id {:c}{:c}{:c}{:c}{:c}{:c}{}".format(data[4], data[5], data[6], data[7], data[8], data[9],
-                                                          (data[10] + data[11] * 256))
+            return "Id {:c}{:c}{:c}{:c}{:c}{:c}{}".format(self.data[4], self.data[5], self.data[6], self.data[7],
+                                                          self.data[8], self.data[9],
+                                                          (self.data[10] + self.data[11] * 256))
         elif self.cc_Header == 130:
-            return "Dispensed " + self.get_int(data)
+            return "Dispensed " + self.get_int()
         elif (self.cc_Header == 128) and (self.cc_Header == 127):
-            return "Total " + self.get_dword(data)
+            return "Total " + self.get_dword()
         elif self.cc_Header == 124:
-            return "Events {} {} {}".format(data[4], data[5] + (data[6] * 256) + (data[7] * 65536) + (
-                    data[8] * 16777216), data[9] + (data[10] * 256) + (data[11] * 65536) + (data[12] * 16777216))
+            return "Events {} {} {}".format(self.data[4],
+                                            self.data[5] + (self.data[6] * 256) + (self.data[7] * 65536) + (
+                                                    self.data[8] * 16777216),
+                                            self.data[9] + (self.data[10] * 256) + (self.data[11] * 65536) + (
+                                                    self.data[12] * 16777216))
         elif self.cc_Header == 123:
-            return "Mask [" + bin(data[4])[2:].rjust(8, "0") + "|" + bin(data[5])[2:].rjust(8, "0") + "]"
+            return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "|" + bin(self.data[5])[2:].rjust(8, "0") + "]"
         elif self.cc_Header == 122:
-            return "Device no. {} fault {}".format(data[4], data[5])
+            return "Device no. {} fault {}".format(self.data[4], self.data[5])
         elif self.cc_Header == 117:
-            return "Value " + self.get_dword(data)
+            return "Value " + self.get_dword()
         elif self.cc_Header == 115:
             return str(
-                datetime.datetime.fromtimestamp(data[4] + (data[5] * 256) + (data[6] * 65536) + (data[7] * 16777216)))
+                datetime.datetime.fromtimestamp(
+                    self.data[4] + (self.data[5] * 256) + (self.data[6] * 65536) + (self.data[7] * 16777216)))
         elif self.cc_Header == 114:
-            return "VID_{} PID_{}".format(data[4] + (data[5] * 256), data[6] + (data[7] * 256))
-        elif (self.cc_Header == 113) and (data[1] == 1):
-            return "Speed ".format(self.baud_rate_code[data[4]])
+            return "VID_{} PID_{}".format(self.data[4] + (self.data[5] * 256), self.data[6] + (self.data[7] * 256))
+        elif (self.cc_Header == 113) and (self.data[1] == 1):
+            return "Speed ".format(self.baud_rate_code[self.data[4]])
         elif self.cc_Header == 106:
             str_result = "Op. status {} ".format(
-                self.operating_status[data[4]])
-            if data[5] == 0:
+                self.operating_status[self.data[4]])
+            if self.data[5] == 0:
                 str_result += "empty "
             else:
                 str_result += "full"
-            str_result += "fault code {}".format(data[6])
+            str_result += "fault code {}".format(self.data[6])
         elif self.cc_Header == 104:
-            if data[1] == 1:
-                return self.service_status[data[4]]
+            if self.data[1] == 1:
+                return self.service_status[self.data[4]]
         elif self.cc_Header == 4:
-            if (data[4]) > 47:
-                return "Release {:c} v{:c}.{:c}".format(data[4], data[5], data[6])
+            if (self.data[4]) > 47:
+                return "Release {:c} v{:c}.{:c}".format(self.data[4], self.data[5], self.data[6])
             else:
-                return "Release {} v{}.{}".format(data[4], data[5], data[6])
+                return "Release {} v{}.{}".format(self.data[4], self.data[5], self.data[6])
         elif self.cc_Header == 2:
-            return "RX : timeouts {}, bytes ignored {}, bad checksum {}".format(data[4], data[5], data[6])
+            return "RX : timeouts {}, bytes ignored {}, bad checksum {}".format(self.data[4], self.data[5],
+                                                                                self.data[6])
         else:
             return ""
 
@@ -1196,10 +1207,10 @@ class Hla(HighLevelAnalyzer):
                             self.cc_Header = self.data[3]
 
                         if self.device_category == self.str_bv:
-                            check_result = self.crc_16(self.data)
+                            check_result = self.crc_16()
                             check_ok = (check_result == self.data[2] + (self.data[self.data[1] + 4] * 256))
                             str_frame = ("{}({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
-                                         self.param_process(self.data) + self.master2slave(self.data) +
+                                         self.param_process() + self.master2slave() +
                                          " - MSB CRC({}) ")
                             self.len_data = 0
                             self.isRequest = True
@@ -1214,7 +1225,7 @@ class Hla(HighLevelAnalyzer):
                             check_result = self.checksum(self.len_data)
                             check_ok = (check_result == self.data[self.len_data - 1])
                             str_frame = ("{}({}) - # param.({}) - Master({}) - {}({}) - param." +
-                                         self.param_process(self.data) + self.master2slave(self.data) + " ")
+                                         self.param_process() + self.master2slave() + " ")
                             self.len_data = 0
                             self.isRequest = True
                             return AnalyzerFrame(str_frame.format(self.device_category, self.data[0], self.data[1],
@@ -1229,10 +1240,10 @@ class Hla(HighLevelAnalyzer):
 
                     if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
                         if self.device_category == self.str_bv:
-                            check_result = self.crc_16(self.data)
+                            check_result = self.crc_16()
                             check_ok = (check_result == self.data[2] + (self.data[self.data[1] + 4] * 256))
                             str_frame = ("Master({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
-                                         self.param_process(self.data) + self.slave2master(self.data) +
+                                         self.param_process() + self.slave2master() +
                                          " - MSB CRC({}) ")
                             self.len_data = 0
                             self.isRequest = False
@@ -1247,7 +1258,7 @@ class Hla(HighLevelAnalyzer):
                             check_result = self.checksum(self.len_data)
                             check_ok = (check_result == self.data[self.len_data - 1])
                             str_frame = ("Master({}) - # param.({}) - {}({}) - {}({}) - param." +
-                                         self.param_process(self.data) + self.slave2master(self.data) + " ")
+                                         self.param_process() + self.slave2master() + " ")
                             self.len_data = 0
                             self.isRequest = False
                             return AnalyzerFrame(str_frame.format(self.data[0], self.data[1], self.device_category,

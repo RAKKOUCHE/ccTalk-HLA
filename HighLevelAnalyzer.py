@@ -277,7 +277,7 @@ class Hla(HighLevelAnalyzer):
         4: "Delete token",
     }
 
-    acknow = {
+    acknowledge = {
         0: "ACK",
         5: "NAK",
         6: "BUSY",
@@ -422,9 +422,13 @@ class Hla(HighLevelAnalyzer):
         label="Slave device address", min_value=2, max_value=255
     )
 
+    str_cv = "Coin validator (8 bits)"
+    str_payout = "Payout (8 bits)"
+    str_bv = "Bill acceptor (CRC 16)"
+
     device_category = ChoicesSetting(
         label="Slave device category",
-        choices=("Coin validator", "Payout", "Bill acceptor"),
+        choices=(str_cv, str_payout, str_bv),
     )
 
     """ An optional list of types this analyzer produces, 
@@ -439,7 +443,7 @@ class Hla(HighLevelAnalyzer):
         self.start_time = None
         self.cc_Header = 0
         self.isMaster2Slave = True
-        # self.isRequest = False
+        self.isRequest = False
         self.broadcast = 0
 
         """       
@@ -457,7 +461,7 @@ class Hla(HighLevelAnalyzer):
         self.len_data = 0
         self.start_time = None
         self.data = bytes()
-        self.isMaster2Slave = True
+        #self.isMaster2Slave = True
         return
 
     def checksum(self, length):
@@ -936,7 +940,7 @@ class Hla(HighLevelAnalyzer):
                 i += 1
             return str_result + "]"
         elif self.cc_Header == 213:
-            if self.device_category == "Coin validator":
+            if self.device_category == self.str_cv:
                 code_format = {
                     0: "Coin pos.",
                     1: "CVF",
@@ -1173,7 +1177,7 @@ class Hla(HighLevelAnalyzer):
                 # Todo MCS header
                 if self.data[0] == self.device_address:  # or (self.data[0] == self.broadcast):
                     self.isMaster2Slave = True
-                elif self.data[0] == 1:
+                elif self.isRequest and self.data[0] == 1:
                     self.isMaster2Slave = False
                 else:
                     raise
@@ -1183,7 +1187,7 @@ class Hla(HighLevelAnalyzer):
 
             if self.len_data > 2:
                 if self.isMaster2Slave:
-                    if (self.len_data == 3) and (self.device_category != "Bill acceptor") and (self.data[2] != 1):
+                    if (self.len_data == 3) and (self.device_category != self.str_bv) and (self.data[2] != 1):
                         raise
 
                     if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
@@ -1193,13 +1197,14 @@ class Hla(HighLevelAnalyzer):
                             str_header = self.header[self.data[3]]
                             self.cc_Header = self.data[3]
 
-                        if self.device_category == "Bill acceptor":
+                        if self.device_category == self.str_bv:
                             check_result = self.crc_16(self.data)
                             check_ok = (check_result == self.data[2] + (self.data[self.data[1] + 4] * 256))
                             str_frame = ("{}({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
                                          self.param_process(self.data) + self.master2slave(self.data) +
                                          " - MSB CRC({}) ")
                             self.len_data = 0
+                            self.isRequest = True
                             return AnalyzerFrame(str_frame.format(self.device_category, self.data[0], self.data[1],
                                                                   self.data[2], str_header, self.data[3],
                                                                   self.data[self.data[1] + 4]),
@@ -1213,26 +1218,28 @@ class Hla(HighLevelAnalyzer):
                             str_frame = ("{}({}) - # param.({}) - Master({}) - {}({}) - param." +
                                          self.param_process(self.data) + self.master2slave(self.data) + " ")
                             self.len_data = 0
+                            self.isRequest = True
                             return AnalyzerFrame(str_frame.format(self.device_category, self.data[0], self.data[1],
                                                                   self.data[2], str_header, self.data[3], check_result),
                                                  self.start_time, frame.end_time,
                                                  {"Checksum ": " {} : ".format(self.data[self.len_data - 1]) +
                                                                self.verif[check_ok]})
                 else:
-                    if (self.len_data == 3) and (self.device_category != "Bill acceptor") and \
+                    if (self.len_data == 3) and (self.device_category != self.str_bv) and \
                             (self.data[2] != self.device_address):
                         raise
 
                     if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
-                        if self.device_category == "Bill acceptor":
+                        if self.device_category == self.str_bv:
                             check_result = self.crc_16(self.data)
                             check_ok = (check_result == self.data[2] + (self.data[self.data[1] + 4] * 256))
                             str_frame = ("Master({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
                                          self.param_process(self.data) + self.slave2master(self.data) +
                                          " - MSB CRC({}) ")
                             self.len_data = 0
+                            self.isRequest = False
                             return AnalyzerFrame(str_frame.format(self.data[0], self.data[1], self.data[2],
-                                                                  self.acknow[self.data[3]], self.data[3],
+                                                                  self.acknowledge[self.data[3]], self.data[3],
                                                                   self.data[self.data[1] + 4]),
                                                  self.start_time, frame.end_time,
                                                  {"Checksum ": " {} : ".format(self.data[2] +
@@ -1244,9 +1251,10 @@ class Hla(HighLevelAnalyzer):
                             str_frame = ("Master({}) - # param.({}) - {}({}) - {}({}) - param." +
                                          self.param_process(self.data) + self.slave2master(self.data) + " ")
                             self.len_data = 0
+                            self.isRequest = False
                             return AnalyzerFrame(str_frame.format(self.data[0], self.data[1], self.device_category,
                                                                   self.data[2],
-                                                                  self.acknow[self.data[3]],
+                                                                  self.acknowledge[self.data[3]],
                                                                   self.data[3]),
                                                  self.start_time, frame.end_time,
                                                  {"Checksum ": " {} : ".format(self.data[self.len_data - 1]) +

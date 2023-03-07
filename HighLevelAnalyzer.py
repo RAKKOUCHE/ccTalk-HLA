@@ -876,7 +876,7 @@ class Hla(HighLevelAnalyzer):
             elif self.data[4] == 9:
                 return "{}Y".format(self.data[5])
             else:
-                return "Inderteminated"
+                return "Undetermined"
         elif self.cc_Header == 248:
             if self.data[4] == 0:
                 return "Status OK"
@@ -1212,8 +1212,6 @@ class Hla(HighLevelAnalyzer):
                             str_frame = ("{}({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
                                          self.param_process() + self.master2slave() +
                                          " - MSB CRC({}) ")
-                            i = 0
-
                             self.len_data = 0
                             self.isRequest = True
                             return AnalyzerFrame(str_frame.format(self.device_category, self.data[0], self.data[1],
@@ -1221,17 +1219,20 @@ class Hla(HighLevelAnalyzer):
                                                                   self.data[self.data[1] + 4]),
                                                  self.start_time, frame.end_time,
                                                  {"Checksum ": " {} : ".format(self.data[2] +
-                                                                               (self.data[self.data[1] + 4] * 256)) +
+                                                                               (self.data[
+                                                                                    self.data[1] + 4] * 256)) +
                                                                self.verif[check_ok]})
                         else:
                             check_result = self.checksum(self.len_data)
                             check_ok = (check_result == self.data[self.len_data - 1])
+                            # if not (self.data[0] == self.broadcast and not check_ok):
                             str_frame = ("{}({}) - # param.({}) - Master({}) - {}({}) - param." +
                                          self.param_process() + self.master2slave() + " ")
                             self.len_data = 0
                             self.isRequest = True
                             return AnalyzerFrame(str_frame.format(self.device_category, self.data[0], self.data[1],
-                                                                  self.data[2], str_header, self.data[3], check_result),
+                                                                  self.data[2], str_header, self.data[3],
+                                                                  check_result),
                                                  self.start_time, frame.end_time,
                                                  {"Checksum ": " {} : ".format(self.data[self.len_data - 1]) +
                                                                self.verif[check_ok]})
@@ -1270,6 +1271,6 @@ class Hla(HighLevelAnalyzer):
                                                  self.start_time, frame.end_time,
                                                  {"Checksum ": " {} : ".format(self.data[self.len_data - 1]) +
                                                                self.verif[check_ok]}, )
-        except:
+        except (KeyError, RuntimeError, IndexError):
             self.reset_frame()
         return

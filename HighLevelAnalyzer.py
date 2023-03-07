@@ -433,18 +433,16 @@ class Hla(HighLevelAnalyzer):
 
     """ An optional list of types this analyzer produces, 
     providing a way to customize the way frames are displayed in Logic 2."""
-    result_types = {
-        "mytype": {"format": "Output type: {{type}}, Input type: {{data.input_type}}"}
-    }
+    # result_types = {
+    #     "mytype": {"format": "Output type: {{type}}, Input type: {{data.input_type}}"}
+    # }
 
     def __init__(self):
         self.data = bytes()
-        self.len_data = 0
+        self.len_data = self.cc_Header = self.broadcast = 0
         self.start_time = None
-        self.cc_Header = 0
         self.isMaster2Slave = True
         self.isRequest = False
-        self.broadcast = 0
 
         """       
         Initialize HLA.
@@ -475,9 +473,8 @@ class Hla(HighLevelAnalyzer):
 
             Returns : le checksum sur 1 octet de la trame - le dernier octet
         """
-        result = 0
-        loop = 0
-        while loop < self.len_data - 1:
+        result = loop = 0
+        while loop < self.data[1] + 4:
             result += self.data[loop]
             loop += 1
         return 256 - (result % 256)
@@ -492,8 +489,7 @@ class Hla(HighLevelAnalyzer):
         list_crc = list(self.data)
         list_crc.pop(2)
         list_crc.pop()
-        word_crc = 0
-        i = 0
+        word_crc = i = 0
         while i < len(list_crc):
             word_crc ^= (list_crc[i] << 8)
             j = 0
@@ -506,24 +502,6 @@ class Hla(HighLevelAnalyzer):
             i += 1
         word_crc &= 0xFFFF
         return word_crc
-
-        # def param_process(self):
-        # """
-        #
-        # Returns:
-        # #
-        # # """
-        # str_result = "["
-        # position = 4
-        # while position < 4 + self.data[1]:
-        #     str_result += str(self.data[position])
-        #     position += 1
-        #     if position < 4 + self.data[1]:
-        #         str_result += " "
-        # str_result += "]"
-        # if self.data[1] > 0:
-        #     str_result += "-->"
-        # return str_result
 
     @property
     def _get_param(self):
@@ -1218,6 +1196,7 @@ class Hla(HighLevelAnalyzer):
 
         try:
             self.data += frame.data["data"][0:]
+            print(frame.data)
             self.len_data += 1
 
             if self.len_data == 1:
@@ -1239,8 +1218,9 @@ class Hla(HighLevelAnalyzer):
                         raise
 
                     if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
+                        self.len_data = self.cc_Header = 0
+                        self.isRequest = True
                         str_header = "unknown"
-                        self.cc_Header = 0
                         if (self.data[3]) in self.header:
                             str_header = self.header[self.data[3]]
                             self.cc_Header = self.data[3]
@@ -1251,8 +1231,6 @@ class Hla(HighLevelAnalyzer):
                             str_frame = ("{}({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
                                          self._get_param + self._master2slave +
                                          " - MSB CRC({}) ")
-                            self.len_data = 0
-                            self.isRequest = True
                             return AnalyzerFrame(str_frame.format(self.device_category, self.data[0], self.data[1],
                                                                   self.data[2], str_header, self.data[3],
                                                                   self.data[self.data[1] + 4]),
@@ -1263,17 +1241,14 @@ class Hla(HighLevelAnalyzer):
                                                                self.verif[check_ok]})
                         else:
                             check_result = self._checksum
-                            check_ok = (check_result == self.data[self.len_data - 1])
-                            # if not (self.data[0] == self.broadcast and not check_ok):
+                            check_ok = (check_result == self.data[-1])
                             str_frame = ("{}({}) - # param.({}) - Master({}) - {}({}) - param." +
                                          self._get_param + self._master2slave + " ")
-                            self.len_data = 0
-                            self.isRequest = True
                             return AnalyzerFrame(str_frame.format(self.device_category, self.data[0], self.data[1],
                                                                   self.data[2], str_header, self.data[3],
                                                                   check_result),
                                                  self.start_time, frame.end_time,
-                                                 {"Checksum ": " {} : ".format(self.data[self.len_data - 1]) +
+                                                 {"Checksum ": " {} : ".format(self.data[ - 1]) +
                                                                self.verif[check_ok]})
                 else:
                     if (self.len_data == 3) and (self.device_category != self.str_bv) and \
@@ -1281,14 +1256,14 @@ class Hla(HighLevelAnalyzer):
                         raise
 
                     if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
+                        self.len_data = 0
+                        self.isRequest = False
                         if self.device_category == self.str_bv:
                             check_result = self._crc_16
                             check_ok = (check_result == self.data[2] + (self.data[self.data[1] + 4] * 256))
                             str_frame = ("Master({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
                                          self._get_param + self._slave2master +
                                          " - MSB CRC({}) ")
-                            self.len_data = 0
-                            self.isRequest = False
                             return AnalyzerFrame(str_frame.format(self.data[0], self.data[1], self.data[2],
                                                                   self.acknowledge[self.data[3]], self.data[3],
                                                                   self.data[self.data[1] + 4]),
@@ -1298,11 +1273,9 @@ class Hla(HighLevelAnalyzer):
                                                                self.verif[check_ok]})
                         else:
                             check_result = self._checksum
-                            check_ok = (check_result == self.data[self.len_data - 1])
+                            check_ok = (check_result == self.data[- 1])
                             str_frame = ("Master({}) - # param.({}) - {}({}) - {}({}) - param." +
                                          self._get_param + self._slave2master + " ")
-                            self.len_data = 0
-                            self.isRequest = False
                             return AnalyzerFrame(str_frame.format(self.data[0], self.data[1], self.device_category,
                                                                   self.data[2],
                                                                   self.acknowledge[self.data[3]],

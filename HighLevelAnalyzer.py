@@ -458,21 +458,36 @@ class Hla(HighLevelAnalyzer):
         # )
 
     def reset_frame(self):
+        """
+            Remise à zéro des informations de documentations de la trame
+        Returns : None
+
+        """
         self.len_data = 0
         self.start_time = None
         self.data = bytes()
         return
 
     def checksum(self, length):
+        """
+            Retourne le checksum 8 bits de la trame
+        Args :
+            length : Nombre d'octetS à traiter
+        Returns : le checksum sur 1 octet de la trame - le dernier octet
+        """
         result = 0
         loop = 0
-
         while loop < length - 1:
             result += self.data[loop]
             loop += 1
         return 256 - (result % 256)
 
     def crc_16(self):
+        """
+            Retourne le CRC-16 de la trame
+        Returns : CRC sur 2 octets
+
+        """
         list_crc = list(self.data)
         list_crc.pop(2)
         list_crc.pop()
@@ -491,20 +506,38 @@ class Hla(HighLevelAnalyzer):
         word_crc &= 0xFFFF
         return word_crc
 
-    def param_process(self):
-        str_result = "["
-        position = 4
-        while position < 4 + self.data[1]:
-            str_result += str(self.data[position])
-            position += 1
-            if position < 4 + self.data[1]:
-                str_result += " "
-        str_result += "]"
-        if self.data[1] > 0:
-            str_result += "-->"
-        return str_result
+        # def param_process(self):
+        # """
+        #
+        # Returns:
+        # #
+        # # """
+        # str_result = "["
+        # position = 4
+        # while position < 4 + self.data[1]:
+        #     str_result += str(self.data[position])
+        #     position += 1
+        #     if position < 4 + self.data[1]:
+        #         str_result += " "
+        # str_result += "]"
+        # if self.data[1] > 0:
+        #     str_result += "-->"
+        # return str_result
 
-    def get_ascii(self):
+    @property
+    def _get_param(self):
+        list_result = []
+        position = 4
+        while position < (4 + self.data[1]):
+            list_result.append(self.data[position])
+            position += 1
+        str_result = str(list_result)
+        if self.data[1] > 0:
+            str_result += "->"
+        return str_result + " "
+
+    @property
+    def _get_ascii(self):
         i = 0
         str_id = " "
         while i < self.data[1]:
@@ -512,19 +545,21 @@ class Hla(HighLevelAnalyzer):
             i += 1
         return str_id
 
-    def get_int(self):
+    @property
+    def _get_int(self):
         return str(self.data[4] + self.data[5] * 256 + self.data[6] * 65536)
 
-    def get_dword(self):
+    @property
+    def _get_dword(self):
         return str(self.data[4] + (self.data[5] * 256) + (self.data[6] * 65536) + (self.data[7] * 16777216))
 
-    def decode_date(self):
+    @property
+    def _decode_date(self):
         result = self.data[4] + (self.data[5] * 256)
-        return "{:02d}/{:02d}/+{:02d}".format(
-            result & 31, (result >> 5) & 15, (result >> 9) & 31
-        )
+        return "{:02d}/{:02d}/+{:02d}".format(result & 31, (result >> 5) & 15, (result >> 9) & 31)
 
-    def decode_buffer_cv(self):
+    @property
+    def _decode_buffer_cv(self):
         str_events = "# Events {} ".format(self.data[4])
         i = 0
         str_result = ""
@@ -554,7 +589,8 @@ class Hla(HighLevelAnalyzer):
             i += 1
         return str_events + str_result
 
-    def decode_buffer_bill(self):
+    @property
+    def _decode_buffer_bill(self):
         str_events = "# Events {} ".format(self.data[4])
         i = 0
         str_result = ""
@@ -577,7 +613,8 @@ class Hla(HighLevelAnalyzer):
             i += 1
         return str_events + str_result
 
-    def master2slave(self):
+    @property
+    def _master2slave(self):
         # Request
         if ((self.cc_Header == 240) or
                 (self.cc_Header == 239) or
@@ -822,7 +859,7 @@ class Hla(HighLevelAnalyzer):
         elif (self.cc_Header == 131) or (self.cc_Header == 130):
             return "No coin {}".format(self.data[4])
         elif self.cc_Header == - 125:
-            return "To pay " + self.get_dword()
+            return "To pay " + self.get_dword
         elif self.cc_Header == 121:
             return "Hopper {} no {}".format(self.data[4], self.data[5])
         elif self.cc_Header == 120:
@@ -830,7 +867,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 119:
             return "Hopper ".format(self.data[4])
         elif self.cc_Header == 118:
-            return "Cash box value " + self.get_dword()
+            return "Cash box value " + self.get_dword
         elif self.cc_Header == 116:
             return str(
                 datetime.datetime.fromtimestamp(
@@ -850,7 +887,8 @@ class Hla(HighLevelAnalyzer):
         else:
             return ""
 
-    def slave2master(self):
+    @property
+    def _slave2master(self):
         # Answer
         if self.cc_Header == 253:
             return str(self.data[4])
@@ -891,11 +929,11 @@ class Hla(HighLevelAnalyzer):
               (self.cc_Header == 171) or
               ((self.cc_Header == 129) and (self.data[1] > 0)) or
               (self.cc_Header == 145)):
-            return self.get_ascii()
+            return self._get_ascii
         elif self.cc_Header == 243:
             return "Data base {}".format(self.data[4])
         elif self.cc_Header == 242:
-            return "S.N. " + self.get_int()
+            return "S.N. " + self._get_int
         elif (
                 (self.cc_Header == 237)
                 or (self.cc_Header == 236)
@@ -912,7 +950,7 @@ class Hla(HighLevelAnalyzer):
                     + "]"
             )
         elif self.cc_Header == 229:
-            return self.decode_buffer_cv()
+            return self._decode_buffer_cv
         elif self.cc_Header == 227:
             str_result = "Master inh. "
             if (self.data[4]) & 1 == 1:
@@ -920,9 +958,9 @@ class Hla(HighLevelAnalyzer):
             else:
                 return str_result + "disabled"
         elif self.cc_Header == 226:
-            return "Insert counter " + self.get_int()
+            return "Insert counter " + self._get_int
         elif (self.cc_Header == 225) or (self.cc_Header == 150):
-            return "Accept counter " + self.get_int()
+            return "Accept counter " + self._get_int
         elif self.cc_Header == 216:
             str_result = [
                 "vola. L.O.R",
@@ -965,7 +1003,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 207:
             return "Coins {}".format(self.data[4] + self.data[5] * 256)
         elif self.cc_Header == 204:
-            return "Meter " + self.get_int()
+            return "Meter " + self._get_int
         elif self.cc_Header == 201:
             return "# coins {} status {}".format(
                 self.data[4], self.teach_status_code[self.data[5]]
@@ -975,13 +1013,13 @@ class Hla(HighLevelAnalyzer):
                 self.data[4], self.data[5], self.data[6], self.data[7]
             )
         elif (self.cc_Header == 196) or (self.cc_Header == 195):
-            return self.decode_date()
+            return self._decode_date
         elif self.cc_Header == 194:
-            return "Rej. counter " + self.get_int()
+            return "Rej. counter " + self._get_int
         elif self.cc_Header == 193:
-            return "Fraud. counter " + self.get_int()
+            return "Fraud. counter " + self._get_int
         elif self.cc_Header == 192:
-            return "Build " + self.get_ascii()
+            return "Build " + self._get_ascii
         elif self.cc_Header == 188:
             return "Def. path {}".format(self.data[4])
         elif self.cc_Header == 186:
@@ -1028,7 +1066,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 169:
             return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]"
         elif self.cc_Header == 168:
-            return self.get_int()
+            return self._get_int
         elif self.cc_Header == 167:
             if (self.data[1]) == 1:
                 return "Event count. {}".format(self.data[4])
@@ -1053,7 +1091,7 @@ class Hla(HighLevelAnalyzer):
                 i += 1
             return str_result
         elif self.cc_Header == 159:
-            return self.decode_buffer_bill()
+            return self._decode_buffer_bill
         elif self.cc_Header == 157:
             return (
                     "Id . "
@@ -1094,7 +1132,7 @@ class Hla(HighLevelAnalyzer):
                 str_result += "non used"
             return str_result
         elif self.cc_Header == 149:
-            return " Error counter : " + self.get_int()
+            return " Error counter : " + self._get_int
         elif self.cc_Header == 148:
             str_result = "Opto voltages {}"
             if self.data[1] == 1:
@@ -1121,9 +1159,9 @@ class Hla(HighLevelAnalyzer):
                                                           self.data[8], self.data[9],
                                                           (self.data[10] + self.data[11] * 256))
         elif self.cc_Header == 130:
-            return "Dispensed " + self.get_int()
+            return "Dispensed " + self._get_int
         elif (self.cc_Header == 128) and (self.cc_Header == 127):
-            return "Total " + self.get_dword()
+            return "Total " + self.get_dword
         elif self.cc_Header == 124:
             return "Events {} {} {}".format(self.data[4],
                                             self.data[5] + (self.data[6] * 256) + (self.data[7] * 65536) + (
@@ -1135,7 +1173,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 122:
             return "Device no. {} fault {}".format(self.data[4], self.data[5])
         elif self.cc_Header == 117:
-            return "Value " + self.get_dword()
+            return "Value " + self.get_dword
         elif self.cc_Header == 115:
             return str(
                 datetime.datetime.fromtimestamp(
@@ -1210,7 +1248,7 @@ class Hla(HighLevelAnalyzer):
                             check_result = self.crc_16()
                             check_ok = (check_result == self.data[2] + (self.data[self.data[1] + 4] * 256))
                             str_frame = ("{}({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
-                                         self.param_process() + self.master2slave() +
+                                         self._get_param + self._master2slave +
                                          " - MSB CRC({}) ")
                             self.len_data = 0
                             self.isRequest = True
@@ -1227,7 +1265,7 @@ class Hla(HighLevelAnalyzer):
                             check_ok = (check_result == self.data[self.len_data - 1])
                             # if not (self.data[0] == self.broadcast and not check_ok):
                             str_frame = ("{}({}) - # param.({}) - Master({}) - {}({}) - param." +
-                                         self.param_process() + self.master2slave() + " ")
+                                         self._get_param + self._master2slave + " ")
                             self.len_data = 0
                             self.isRequest = True
                             return AnalyzerFrame(str_frame.format(self.device_category, self.data[0], self.data[1],
@@ -1246,7 +1284,7 @@ class Hla(HighLevelAnalyzer):
                             check_result = self.crc_16()
                             check_ok = (check_result == self.data[2] + (self.data[self.data[1] + 4] * 256))
                             str_frame = ("Master({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
-                                         self.param_process() + self.slave2master() +
+                                         self._get_param + self._slave2master +
                                          " - MSB CRC({}) ")
                             self.len_data = 0
                             self.isRequest = False
@@ -1261,7 +1299,7 @@ class Hla(HighLevelAnalyzer):
                             check_result = self.checksum(self.len_data)
                             check_ok = (check_result == self.data[self.len_data - 1])
                             str_frame = ("Master({}) - # param.({}) - {}({}) - {}({}) - param." +
-                                         self.param_process() + self.slave2master() + " ")
+                                         self._get_param + self._slave2master + " ")
                             self.len_data = 0
                             self.isRequest = False
                             return AnalyzerFrame(str_frame.format(self.data[0], self.data[1], self.device_category,

@@ -468,21 +468,22 @@ class Hla(HighLevelAnalyzer):
         self.data = bytes()
         return
 
-    def checksum(self, length):
+    @property
+    def _checksum(self):
         """
             Retourne le checksum 8 bits de la trame
-        Args :
-            length : Nombre d'octetS à traiter
-        Returns : le checksum sur 1 octet de la trame - le dernier octet
+
+            Returns : le checksum sur 1 octet de la trame - le dernier octet
         """
         result = 0
         loop = 0
-        while loop < length - 1:
+        while loop < self.len_data - 1:
             result += self.data[loop]
             loop += 1
         return 256 - (result % 256)
 
-    def crc_16(self):
+    @property
+    def _crc_16(self):
         """
             Retourne le CRC-16 de la trame
         Returns : CRC sur 2 octets
@@ -1245,7 +1246,7 @@ class Hla(HighLevelAnalyzer):
                             self.cc_Header = self.data[3]
 
                         if self.device_category == self.str_bv:
-                            check_result = self.crc_16()
+                            check_result = self._crc_16
                             check_ok = (check_result == self.data[2] + (self.data[self.data[1] + 4] * 256))
                             str_frame = ("{}({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
                                          self._get_param + self._master2slave +
@@ -1261,7 +1262,7 @@ class Hla(HighLevelAnalyzer):
                                                                                     self.data[1] + 4] * 256)) +
                                                                self.verif[check_ok]})
                         else:
-                            check_result = self.checksum(self.len_data)
+                            check_result = self._checksum
                             check_ok = (check_result == self.data[self.len_data - 1])
                             # if not (self.data[0] == self.broadcast and not check_ok):
                             str_frame = ("{}({}) - # param.({}) - Master({}) - {}({}) - param." +
@@ -1281,7 +1282,7 @@ class Hla(HighLevelAnalyzer):
 
                     if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
                         if self.device_category == self.str_bv:
-                            check_result = self.crc_16()
+                            check_result = self._crc_16
                             check_ok = (check_result == self.data[2] + (self.data[self.data[1] + 4] * 256))
                             str_frame = ("Master({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
                                          self._get_param + self._slave2master +
@@ -1296,7 +1297,7 @@ class Hla(HighLevelAnalyzer):
                                                                                (self.data[self.data[1] + 4] * 256)) +
                                                                self.verif[check_ok]})
                         else:
-                            check_result = self.checksum(self.len_data)
+                            check_result = self._checksum
                             check_ok = (check_result == self.data[self.len_data - 1])
                             str_frame = ("Master({}) - # param.({}) - {}({}) - {}({}) - param." +
                                          self._get_param + self._slave2master + " ")

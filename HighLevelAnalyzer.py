@@ -466,7 +466,7 @@ class Hla(HighLevelAnalyzer):
     def checksum(self, length):
         result = 0
         loop = 0
-        # print("\nlength {}".format(length))
+
         while loop < length - 1:
             result += self.data[loop]
             loop += 1
@@ -569,11 +569,11 @@ class Hla(HighLevelAnalyzer):
                         self.data[5 + (i * 2)])
             else:
                 if self.data[6 + (i * 2)] < 22:
-                    str_result += "Code : {}".format(
-                        self.BILL_Error_Code[self.data[6 + (i * 2)]]
-                    )
+                    str_result += "Code {} {}".format(self.data[6 + (i * 2)],
+                                                        self.BILL_Error_Code[self.data[6 + (i * 2)]]
+                                                        )
                 else:
-                    str_result += "Code : {} inconnu".format(self.data[6 + (i * 2)])
+                    str_result += "Code {} inconnu".format(self.data[6 + (i * 2)])
             i += 1
         return str_events + str_result
 
@@ -752,8 +752,6 @@ class Hla(HighLevelAnalyzer):
                 str_result += " {}".format(self.data[4 + i])
                 i += 1
             return str_result
-        elif self.cc_Header == 159:
-            return self.decode_buffer_bill()
         elif self.cc_Header == 158:
             return (
                     "Bill. type {} Id.".format(self.data[4])
@@ -913,7 +911,7 @@ class Hla(HighLevelAnalyzer):
                     + bin(self.data[4])[2:].rjust(8, "0")
                     + "]"
             )
-        elif self.cc_Header == 229:  # or (self.cc_Header == 159):
+        elif self.cc_Header == 229:
             return self.decode_buffer_cv()
         elif self.cc_Header == 227:
             str_result = "Master inh. "
@@ -1054,6 +1052,8 @@ class Hla(HighLevelAnalyzer):
                 str_result += " {}".format(self.data[4 + i])
                 i += 1
             return str_result
+        elif self.cc_Header == 159:
+            return self.decode_buffer_bill()
         elif self.cc_Header == 157:
             return (
                     "Id . "
@@ -1212,6 +1212,8 @@ class Hla(HighLevelAnalyzer):
                             str_frame = ("{}({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
                                          self.param_process() + self.master2slave() +
                                          " - MSB CRC({}) ")
+                            i = 0
+
                             self.len_data = 0
                             self.isRequest = True
                             return AnalyzerFrame(str_frame.format(self.device_category, self.data[0], self.data[1],

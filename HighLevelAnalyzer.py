@@ -569,11 +569,11 @@ class Hla(HighLevelAnalyzer):
                         self.data[5 + (i * 2)])
             else:
                 if self.data[6 + (i * 2)] < 22:
-                    str_result += "Code {} {}".format(self.data[6 + (i * 2)],
+                    str_result += "Code {} : {}".format(self.data[6 + (i * 2)],
                                                         self.BILL_Error_Code[self.data[6 + (i * 2)]]
                                                         )
                 else:
-                    str_result += "Code {} inconnu".format(self.data[6 + (i * 2)])
+                    str_result += "Code {} : inconnu".format(self.data[6 + (i * 2)])
             i += 1
         return str_events + str_result
 

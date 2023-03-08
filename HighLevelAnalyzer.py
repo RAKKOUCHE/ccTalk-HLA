@@ -439,7 +439,7 @@ class Hla(HighLevelAnalyzer):
     # }
 
     def __init__(self):
-        self.data = bytes()
+        self.data = []
         self.len_data = self.cc_Header = self.broadcast = 0
         self.start_time = None
         self.isMaster2Slave = True
@@ -465,7 +465,7 @@ class Hla(HighLevelAnalyzer):
         """
         self.len_data = 0
         self.start_time = None
-        self.data = bytes()
+        self.data = []
         return
 
     @property
@@ -490,12 +490,11 @@ class Hla(HighLevelAnalyzer):
             CRC sur 2 octets
 
         """
-        list_crc = list(self.data)
-        list_crc.pop(2)
-        list_crc.pop()
+        self.data.pop(2)
+        self.data.pop()
         word_crc = i = 0
-        while i < len(list_crc):
-            word_crc ^= (list_crc[i] << 8)
+        while i < len(self.data):
+            word_crc ^= (self.data[i] << 8)
             j = 0
             while j < 8:
                 if word_crc & 0x8000:
@@ -1237,7 +1236,9 @@ class Hla(HighLevelAnalyzer):
             self.reset_frame()
 
         try:
-            self.data += frame.data["data"][0:]
+            self.data += frame.data["data"]
+            print("\n frame.data ", frame.data, " ")
+            print(type(frame.data))
             self.len_data += 1
 
             if self.len_data == 1:

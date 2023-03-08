@@ -433,6 +433,7 @@ class Hla(HighLevelAnalyzer):
 
     """ An optional list of types this analyzer produces, 
     providing a way to customize the way frames are displayed in Logic 2."""
+
     # result_types = {
     #     "mytype": {"format": "Output type: {{type}}, Input type: {{data.input_type}}"}
     # }
@@ -505,6 +506,12 @@ class Hla(HighLevelAnalyzer):
 
     @property
     def _get_param(self):
+        """
+        Isole les paramètres et les retourne entre crochets
+        Returns : Une chaine de caractères contenant les
+        paramètres et se finissant par une flèche si une interpretation sera affichée
+
+        """
         list_result = []
         position = 4
         while position < (4 + self.data[1]):
@@ -517,6 +524,10 @@ class Hla(HighLevelAnalyzer):
 
     @property
     def _get_ascii(self):
+        """
+            Convertit les paramètres en chaines de caractères
+        Returns : Une chaine de caractères contenant les caractères ascii des paramètres
+        """
         i = 0
         str_id = " "
         while i < self.data[1]:
@@ -526,15 +537,20 @@ class Hla(HighLevelAnalyzer):
 
     @property
     def _get_int(self):
-        return str(self.data[4] + self.data[5] * 256 + self.data[6] * 65536)
-
-    @property
-    def _get_dword(self):
-        return str(self.data[4] + (self.data[5] * 256) + (self.data[6] * 65536) + (self.data[7] * 16777216))
+        """
+            Calcule la valeur d'un entier à partir des 3 octets reçus en paramètres
+        Returns: Un entier
+        """
+        int_result = self.data[4] + (self.data[5] * 256)
+        if self.data[1] > 2:
+            int_result += self.data[6] * 65536
+        if self.data[1] == 4:
+            int_result += self.data[7] * 16777216
+        return int_result
 
     @property
     def _decode_date(self):
-        result = self.data[4] + (self.data[5] * 256)
+        result = self._get_int  # self.data[4] + (self.data[5] * 256)
         return "{:02d}/{:02d}/+{:02d}".format(result & 31, (result >> 5) & 15, (result >> 9) & 31)
 
     @property
@@ -715,7 +731,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 180:
             return "Pos. {}".format(self.data[4])
         elif self.cc_Header == 179:
-            return "Bank select ".format(self.data[4])
+            return "Bank select {} ".format(self.data[4])
         elif self.cc_Header == 175:
             if self.data[1] == 2:
                 return "No. coins {} ".format(self.data[4] + (self.data[5] * 256))
@@ -912,7 +928,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 243:
             return "Data base {}".format(self.data[4])
         elif self.cc_Header == 242:
-            return "S.N. " + self._get_int
+            return "S.N. {} ".format(self._get_int)
         elif (
                 (self.cc_Header == 237)
                 or (self.cc_Header == 236)
@@ -937,9 +953,9 @@ class Hla(HighLevelAnalyzer):
             else:
                 return str_result + "disabled"
         elif self.cc_Header == 226:
-            return "Insert counter " + self._get_int
+            return "Insert counter {} ".format(self._get_int)
         elif (self.cc_Header == 225) or (self.cc_Header == 150):
-            return "Accept counter " + self._get_int
+            return "Accept counter {} ".format(self._get_int)
         elif self.cc_Header == 216:
             str_result = [
                 "vola. L.O.R",
@@ -980,13 +996,11 @@ class Hla(HighLevelAnalyzer):
                 str_result += " info {}".format(self.extra_info[self.data[5]])
             return str_result
         elif self.cc_Header == 207:
-            return "Coins {}".format(self.data[4] + self.data[5] * 256)
+            return "Coins {} ".format(self.data[4] + self.data[5] * 256)
         elif self.cc_Header == 204:
-            return "Meter " + self._get_int
+            return "Meter {} ".format(self._get_int)
         elif self.cc_Header == 201:
-            return "# coins {} status {}".format(
-                self.data[4], self.teach_status_code[self.data[5]]
-            )
+            return "# coins {} status {}".format(self.data[4], self.teach_status_code[self.data[5]])
         elif self.cc_Header == 197:
             return "Chk 1 {} Chk 2 {} Chk 3 {} Chk {}".format(
                 self.data[4], self.data[5], self.data[6], self.data[7]
@@ -994,15 +1008,15 @@ class Hla(HighLevelAnalyzer):
         elif (self.cc_Header == 196) or (self.cc_Header == 195):
             return self._decode_date
         elif self.cc_Header == 194:
-            return "Rej. counter " + self._get_int
+            return "Rej. counter {} ".format(self._get_int)
         elif self.cc_Header == 193:
-            return "Fraud. counter " + self._get_int
+            return "Fraud. counter {} ".format(self._get_int)
         elif self.cc_Header == 192:
             return "Build " + self._get_ascii
         elif self.cc_Header == 188:
-            return "Def. path {}".format(self.data[4])
+            return "Def. path {} ".format(self.data[4])
         elif self.cc_Header == 186:
-            return "No. coins {}".format(self.data[4] + (self.data[5] * 256))
+            return "No. coins {} ".format(self.data[4] + (self.data[5] * 256))
         elif self.cc_Header == 184:
             return (
                     "Id . "
@@ -1023,21 +1037,21 @@ class Hla(HighLevelAnalyzer):
                 i += 1
             return str_result
         elif self.cc_Header == 180:
-            return "Setting ".format(self.data[4])
+            return "Setting {} ".format(self.data[4])
         elif self.cc_Header == 178:
-            return "Bank select ".format(self.data[4])
+            return "Bank select {} ".format(self.data[4])
         elif self.cc_Header == 176:
             return "Alarm counter {}".format(self.data[4])
         elif self.cc_Header == 174:
             return "No. coins {} ".format(self.data[4] + self.data[5] * 256)
         elif self.cc_Header == 173:
-            str_result = "Temp. "
+            str_result = "Temp. {} "
             if (self.data[4] and 128) == 128:
                 return str_result + "-".format(self.data[4])
             else:
                 return str_result.format(self.data[4])
         elif self.cc_Header == 172:
-            return " Remaining ".format(self.data[4])
+            return " Remaining {} ".format(self.data[4])
         elif self.cc_Header == 170:
             return "Base year {}{}{}{}".format(
                 chr(self.data[4]), chr(self.data[5]), chr(self.data[6]), chr(self.data[7])
@@ -1045,7 +1059,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 169:
             return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]"
         elif self.cc_Header == 168:
-            return self._get_int
+            return "Dispensed {} ".format(self._get_int)
         elif self.cc_Header == 167:
             if (self.data[1]) == 1:
                 return "Event count. {}".format(self.data[4])
@@ -1063,7 +1077,7 @@ class Hla(HighLevelAnalyzer):
                 i += 1
             return str_result
         elif self.cc_Header == 160:
-            str_result = "KEY : "
+            str_result = "KEY :"
             i = 0
             while i < self.data[1]:
                 str_result += " {}".format(self.data[4 + i])
@@ -1111,7 +1125,7 @@ class Hla(HighLevelAnalyzer):
                 str_result += "non used"
             return str_result
         elif self.cc_Header == 149:
-            return " Error counter : " + self._get_int
+            return " Error counter : {} ".format(self._get_int)
         elif self.cc_Header == 148:
             str_result = "Opto voltages {}"
             if self.data[1] == 1:
@@ -1124,23 +1138,23 @@ class Hla(HighLevelAnalyzer):
             else:
                 return ""
         elif self.cc_Header == 141:
-            return "FW option {}".format(self.data[4])
+            return "FW option {} ".format(self.data[4])
         elif (self.cc_Header == 134) and (self.data[1] == 1):
-            return "Events {}".format(self.data[4])
+            return "Events {} ".format(self.data[4])
         elif self.cc_Header == 133:
-            return "Events {} remain. {} paid {} unpaid {}".format(self.data[4], (self.data[5] + (self.data[6] * 256)),
-                                                                   (self.data[7] + (self.data[8] * 256)),
-                                                                   (self.data[9] + (self.data[10] * 256)))
+            return "Events {} remain. {} paid {} unpaid {} ".format(self.data[4], (self.data[5] + (self.data[6] * 256)),
+                                                                    (self.data[7] + (self.data[8] * 256)),
+                                                                    (self.data[9] + (self.data[10] * 256)))
         elif self.cc_Header == 132:
-            return "remain. {}".format(self.data[4] + self.data[5] * 256)
+            return "remain. {} ".format(self.data[4] + self.data[5] * 256)
         elif (self.cc_Header == 131) or (self.cc_Header == 119):
             return "Id {:c}{:c}{:c}{:c}{:c}{:c}{}".format(self.data[4], self.data[5], self.data[6], self.data[7],
                                                           self.data[8], self.data[9],
                                                           (self.data[10] + self.data[11] * 256))
         elif self.cc_Header == 130:
-            return "Dispensed " + self._get_int
+            return "Dispensed {} ".format(self._get_int)
         elif (self.cc_Header == 128) and (self.cc_Header == 127):
-            return "Total " + self.get_dword
+            return "Total {} ".format(self._get_int)
         elif self.cc_Header == 124:
             return "Events {} {} {}".format(self.data[4],
                                             self.data[5] + (self.data[6] * 256) + (self.data[7] * 65536) + (
@@ -1152,7 +1166,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 122:
             return "Device no. {} fault {}".format(self.data[4], self.data[5])
         elif self.cc_Header == 117:
-            return "Value " + self.get_dword
+            return "Value {} " + self.get_dword
         elif self.cc_Header == 115:
             return str(
                 datetime.datetime.fromtimestamp(
@@ -1160,14 +1174,14 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 114:
             return "VID_{} PID_{}".format(self.data[4] + (self.data[5] * 256), self.data[6] + (self.data[7] * 256))
         elif (self.cc_Header == 113) and (self.data[1] == 1):
-            return "Speed ".format(self.baud_rate_code[self.data[4]])
+            return "Speed {} ".format(self.baud_rate_code[self.data[4]])
         elif self.cc_Header == 106:
             str_result = "Op. status {} ".format(
                 self.operating_status[self.data[4]])
             if self.data[5] == 0:
                 str_result += "empty "
             else:
-                str_result += "full"
+                str_result += "full "
             str_result += "fault code {}".format(self.data[6])
         elif self.cc_Header == 104:
             if self.data[1] == 1:
@@ -1196,7 +1210,6 @@ class Hla(HighLevelAnalyzer):
 
         try:
             self.data += frame.data["data"][0:]
-            print(frame.data)
             self.len_data += 1
 
             if self.len_data == 1:
@@ -1248,7 +1261,7 @@ class Hla(HighLevelAnalyzer):
                                                                   self.data[2], str_header, self.data[3],
                                                                   check_result),
                                                  self.start_time, frame.end_time,
-                                                 {"Checksum ": " {} : ".format(self.data[ - 1]) +
+                                                 {"Checksum ": " {} : ".format(self.data[- 1]) +
                                                                self.verif[check_ok]})
                 else:
                     if (self.len_data == 3) and (self.device_category != self.str_bv) and \

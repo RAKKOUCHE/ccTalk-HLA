@@ -21,7 +21,7 @@ class Hla(HighLevelAnalyzer):
     Args:
         HighLevelAnalyzer: class mère
 
-    Returns:
+    Returns :
         AnalyzerFrame: description de la  trame
     """
     header = {
@@ -159,8 +159,8 @@ class Hla(HighLevelAnalyzer):
         121: "Purge hopper",
         120: "Modify hopper balance",
         119: "Request hopper balance",
-        118: "Modify cashbox value",
-        117: "Request cashbox value",
+        118: "Modify cash box value",
+        117: "Request cash box value",
         116: "Modify real time clock",
         115: "Request real time clock",
         114: "Request USB id",
@@ -422,9 +422,9 @@ class Hla(HighLevelAnalyzer):
         label="Slave device address", min_value=2, max_value=255
     )
 
-    str_cv = "Coin validator(8 bits) "
-    str_payout = "Payout(8 bits) "
-    str_bv = "Bill acceptor(CRC 16) "
+    str_cv = "Coin validator[chk 8]"
+    str_payout = "Payout[chk 8]"
+    str_bv = "Bill acceptor[CRC-16]"
 
     device_category = ChoicesSetting(
         label="Slave device category",
@@ -459,7 +459,8 @@ class Hla(HighLevelAnalyzer):
     def reset_frame(self):
         """
             Remise à zéro des informations de documentations de la trame
-        Returns : None
+        Returns :
+            None
 
         """
         self.len_data = 0
@@ -472,7 +473,8 @@ class Hla(HighLevelAnalyzer):
         """
             Retourne le checksum 8 bits de la trame
 
-            Returns : le checksum sur 1 octet de la trame - le dernier octet
+        Returns :
+            le checksum sur 1 octet de la trame - le dernier octet
         """
         result = loop = 0
         while loop < self.data[1] + 4:
@@ -484,7 +486,8 @@ class Hla(HighLevelAnalyzer):
     def _crc_16(self):
         """
             Retourne le CRC-16 de la trame
-        Returns : CRC sur 2 octets
+        Returns :
+            CRC sur 2 octets
 
         """
         list_crc = list(self.data)
@@ -508,8 +511,9 @@ class Hla(HighLevelAnalyzer):
     def _get_param(self):
         """
         Isole les paramètres et les retourne entre crochets
-        Returns : Une chaine de caractères contenant les
-        paramètres et se finissant par une flèche si une interpretation sera affichée
+        Returns :
+            Une chaine de caractères contenant les paramètres et se finissant par une flèche si une interpretation sera
+            affichée
 
         """
         list_result = []
@@ -526,7 +530,8 @@ class Hla(HighLevelAnalyzer):
     def _get_ascii(self):
         """
             Convertit les paramètres en chaines de caractères
-        Returns : Une chaine de caractères contenant les caractères ascii des paramètres
+        Returns :
+            Une chaine de caractères contenant les caractères ascii des paramètres
         """
         i = 0
         str_id = " "
@@ -539,7 +544,8 @@ class Hla(HighLevelAnalyzer):
     def _get_int(self):
         """
             Calcule la valeur d'un entier à partir des 3 octets reçus en paramètres
-        Returns: Un entier
+        Returns :
+            Un entier
         """
         int_result = self.data[4] + (self.data[5] * 256)
         if self.data[1] > 2:
@@ -550,11 +556,22 @@ class Hla(HighLevelAnalyzer):
 
     @property
     def _decode_date(self):
-        result = self._get_int  # self.data[4] + (self.data[5] * 256)
+        """
+            Calcule et interprète une date ccTalk
+        Returns :
+            Une chaine de caractères contenant la date
+
+        """
+        result = self._get_int
         return "{:02d}/{:02d}/+{:02d}".format(result & 31, (result >> 5) & 15, (result >> 9) & 31)
 
     @property
     def _decode_buffer_cv(self):
+        """
+            Analyse le buffer des événements et des errors du monnayeur
+        Returns :
+            Une chaine de caractères contenant l'interprétation du buffer
+        """
         str_events = "# Events {} ".format(self.data[4])
         i = 0
         str_result = ""
@@ -586,6 +603,12 @@ class Hla(HighLevelAnalyzer):
 
     @property
     def _decode_buffer_bill(self):
+        """
+            Analyse le buffer des événements et des errors du monnayeur
+
+        Returns :
+            Une chaine de caractères contenant l'interprétation du buffer
+        """
         str_events = "# Events {} ".format(self.data[4])
         i = 0
         str_result = ""
@@ -596,7 +619,7 @@ class Hla(HighLevelAnalyzer):
                 if self.data[6 + (i * 2)] == 1:
                     str_result += "Bill {} in escrow".format(self.data[5 + (i * 2)])
                 else:
-                    str_result += "Bill {} in cashbox".format(
+                    str_result += "Bill {} in cash box".format(
                         self.data[5 + (i * 2)])
             else:
                 if self.data[6 + (i * 2)] < 22:
@@ -610,7 +633,12 @@ class Hla(HighLevelAnalyzer):
 
     @property
     def _master2slave(self):
-        # Request
+        """
+            Effectue l'interprétation des paramètres contenu dans le message du master
+
+        Returns :
+            Une chaine de caractères contenant l'interprétation du message du master
+        """
         if ((self.cc_Header == 240) or
                 (self.cc_Header == 239) or
                 (self.cc_Header == 238) or
@@ -668,7 +696,7 @@ class Hla(HighLevelAnalyzer):
             return "Hopper no. {}".format(self.data[4])
         elif self.cc_Header == 208:
             if self.data[1] == 2:
-                return "Coins {}".format(self.data[4] + (self.data[5] * 256))
+                return "Coins {}".format(self._get_int)
             elif self.data[1] == 3:
                 return "Hopper {} - Coins {}".format(self.data[4], self.data[5] + self.data[6] + 256)
             else:
@@ -690,7 +718,7 @@ class Hla(HighLevelAnalyzer):
             return "Def. path {}".format(self.data[4])
         elif self.cc_Header == 187:
             if self.data[1] == 2:
-                return "Capacity {}".format(self.data[4] + (self.data[5] * 256))
+                return "Capacity {}".format(self._get_int)
             else:
                 return "Hopper no. {} Capacity {}".format(
                     self.data[4], self.data[5] + (self.data[6] * 256)
@@ -715,8 +743,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 184:
             return "Pos. {}".format(self.data[4])
         elif self.cc_Header == 183:
-            str_result = "Pos. {} Cmd {} ".format(
-                self.data[5], self.up_window_data[self.data[4]])
+            str_result = "Pos. {} Cmd {} ".format(self.data[5], self.up_window_data[self.data[4]])
             if (self.data[4] == 0) or (self.data[4] == 3):
                 str_result += " var."
                 i = 0
@@ -734,7 +761,7 @@ class Hla(HighLevelAnalyzer):
             return "Bank select {} ".format(self.data[4])
         elif self.cc_Header == 175:
             if self.data[1] == 2:
-                return "No. coins {} ".format(self.data[4] + (self.data[5] * 256))
+                return "No. coins {} ".format(self._get_int)
             elif self.data[1] == 3:
                 return "Hopper {} No. coins {} ".format(
                     self.data[4], self.data[5] + (self.data[6] * 256)
@@ -864,9 +891,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 118:
             return "Cash box value " + self.get_dword
         elif self.cc_Header == 116:
-            return str(
-                datetime.datetime.fromtimestamp(
-                    self.data[4] + (self.data[5] * 256) + (self.data[6] * 65536) + (self.data[7] * 16777216)))
+            return str(datetime.datetime.fromtimestamp(self._get_int))
         elif self.cc_Header == 113:
             return "Op. {} {}".format(self.baud_rate_OP[self.data[4]], self.baud_rate_code[self.data[5]])
         elif self.cc_Header == 107:
@@ -884,7 +909,12 @@ class Hla(HighLevelAnalyzer):
 
     @property
     def _slave2master(self):
-        # Answer
+        """
+            Effectue l'interprétation des paramètres contenus dans le message du périphérique
+
+        Returns :
+            Une chaine de caractères contenant l'interprétation du message du périphérique
+        """
         if self.cc_Header == 253:
             return str(self.data[4])
         elif self.cc_Header == 249:
@@ -996,7 +1026,7 @@ class Hla(HighLevelAnalyzer):
                 str_result += " info {}".format(self.extra_info[self.data[5]])
             return str_result
         elif self.cc_Header == 207:
-            return "Coins {} ".format(self.data[4] + self.data[5] * 256)
+            return "Coins {} ".format(self._get_int)
         elif self.cc_Header == 204:
             return "Meter {} ".format(self._get_int)
         elif self.cc_Header == 201:
@@ -1043,7 +1073,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 176:
             return "Alarm counter {}".format(self.data[4])
         elif self.cc_Header == 174:
-            return "No. coins {} ".format(self.data[4] + self.data[5] * 256)
+            return "No. coins {} ".format(self._get_int)
         elif self.cc_Header == 173:
             str_result = "Temp. {} "
             if (self.data[4] and 128) == 128:
@@ -1099,9 +1129,7 @@ class Hla(HighLevelAnalyzer):
                     + chr(self.data[10])
             )
         elif self.cc_Header == 156:
-            return "Scaling factor {} decimal {}".format(
-                self.data[4] + self.data[5] * 256, self.data[6]
-            )
+            return "Scaling factor {} decimal {}".format(self._get_int, self.data[6])
         elif self.cc_Header == 155:
             return (
                     "Mask ["
@@ -1146,7 +1174,7 @@ class Hla(HighLevelAnalyzer):
                                                                     (self.data[7] + (self.data[8] * 256)),
                                                                     (self.data[9] + (self.data[10] * 256)))
         elif self.cc_Header == 132:
-            return "remain. {} ".format(self.data[4] + self.data[5] * 256)
+            return "remain. {} ".format(self._get_int)
         elif (self.cc_Header == 131) or (self.cc_Header == 119):
             return "Id {:c}{:c}{:c}{:c}{:c}{:c}{}".format(self.data[4], self.data[5], self.data[6], self.data[7],
                                                           self.data[8], self.data[9],
@@ -1199,10 +1227,10 @@ class Hla(HighLevelAnalyzer):
 
     def decode(self, frame: AnalyzerFrame):
         """
-        Process a frame from the input analyzer, and optionally return a single `AnalyzerFrame`
-        or a list of `AnalyzerFrame`s.
+            Process a frame from the input analyzer, and optionally return a single `AnalyzerFrame`
+            or a list of `AnalyzerFrame`s.
 
-        The type and data values in `frame` will depend on the input analyzer.
+            The type and data values in `frame` will depend on the input analyzer.
         """
 
         if self.len_data == 0:

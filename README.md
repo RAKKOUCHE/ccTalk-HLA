@@ -2,6 +2,7 @@
   ccTalk Bus Saleae High Level Analyser
 
 ## Screens shot
+  ![Screemshot](ccTalk.png)
   ![Screenshot](Screens.pdf)
 
 ## Feature

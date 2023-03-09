@@ -488,13 +488,13 @@ class Hla(HighLevelAnalyzer):
             Retourne le CRC-16 de la trame
         Returns :
             CRC sur 2 octets
-
         """
-        self.data.pop(2)
-        self.data.pop()
+        list_locale = list(self.data)
+        list_locale.pop(2)
+        list_locale.pop()
         word_crc = i = 0
-        while i < len(self.data):
-            word_crc ^= (self.data[i] << 8)
+        while i < len(list_locale):
+            word_crc ^= (list_locale[i] << 8)
             j = 0
             while j < 8:
                 if word_crc & 0x8000:
@@ -1237,8 +1237,6 @@ class Hla(HighLevelAnalyzer):
 
         try:
             self.data += frame.data["data"]
-            print("\n frame.data ", frame.data, " ")
-            print(type(frame.data))
             self.len_data += 1
 
             if self.len_data == 1:
@@ -1258,6 +1256,8 @@ class Hla(HighLevelAnalyzer):
                 if self.isMaster2Slave:
                     if (self.len_data == 3) and (self.device_category != self.str_bv) and (self.data[2] != 1):
                         raise
+                    else:
+                        print("\ndata ", self.data)
 
                     if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
                         self.len_data = self.cc_Header = 0
@@ -1269,7 +1269,7 @@ class Hla(HighLevelAnalyzer):
 
                         if self.device_category == self.str_bv:
                             check_result = self._crc_16
-                            check_ok = (check_result == self.data[2] + (self.data[self.data[1] + 4] * 256))
+                            check_ok = check_result == self.data[2] + (self.data[-1] * 256)
                             str_frame = ("{}({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
                                          self._get_param + self._master2slave +
                                          " - MSB CRC({}) ")

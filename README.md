@@ -2,9 +2,10 @@
   ccTalk Bus Saleae High Level Analyser
 
 ## Screens shot
-  ![Screemshot](ccTalk.png)
-  ![Screenshot](Screens.pdf)
+  CCTALK.png
 
+  ![Screemshot](ccTalk.png)
+  
 ## Feature
   * Decode Device to master and master to device
 

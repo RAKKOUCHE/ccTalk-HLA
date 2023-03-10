@@ -444,6 +444,7 @@ class Hla(HighLevelAnalyzer):
         self.start_time = None
         self.isMaster2Slave = True
         self.isRequest = False
+        self.base_year = 0
 
         """       
         Initialize HLA.
@@ -523,7 +524,7 @@ class Hla(HighLevelAnalyzer):
         str_result = str(list_result)
         if self.data[1] > 0:
             str_result += "->"
-        return str_result + " "
+        return str_result + ""
 
     @property
     def _get_ascii(self):
@@ -562,7 +563,10 @@ class Hla(HighLevelAnalyzer):
 
         """
         result = self._get_int
-        return "{:02d}/{:02d}/+{:02d}".format(result & 31, (result >> 5) & 15, (result >> 9) & 31)
+        if self.base_year > 0:
+            return "{:02d}/{:02d}/{:04d}".format(result & 31, (result >> 5) & 15, 2000 + ((result >> 9) & 31))
+        else:
+            return "{:02d}/{:02d}/+{:02d}".format(result & 31, (result >> 5) & 15, (result >> 9) & 31)
 
     @property
     def _decode_buffer_cv(self):
@@ -571,32 +575,28 @@ class Hla(HighLevelAnalyzer):
         Returns :
             Une chaine de caractères contenant l'interprétation du buffer
         """
-        str_events = "# Events {} ".format(self.data[4])
-        i = 0
+        str_events = f"# Events {self.data[4]} "
         str_result = ""
+        i = 0
         while i < 5:
-            str_result += " - Result {} : ".format(i + 1)
+            str_result += f" - Result {i + 1} : "
             if self.data[5 + (i * 2)] > 0:
                 # Coin accepted
-                str_result += "Coin {} Sort. {}".format(
-                    self.data[5 + (i * 2)], self.data[6 + (i * 2)]
-                )
+                str_result += f"Coin {self.data[5 + (i * 2)]} Sort. {self.data[6 + (i * 2)]}"
             else:
                 # Erreur
-                str_result += "Err. #{} ".format(self.data[6 + (i * 2)])
+                str_result += f"Err. #{self.data[6 + (i * 2)]} "
                 # Erreur inhibited
                 if (self.data[6 + (i * 2)] > 127) and (self.data[6 + (i * 2)] < 160):
-                    str_result += "Inhibited ch. {}", (self.data[6 + (i * 2)] - 127)
+                    str_result += f"Inhibited ch. {self.data[6 + (i * 2)] - 127}"
                     # Erreur reserved
                 elif (self.data[6 + (i * 2)] > 159) and (self.data[6 + (i * 2)] < 191):
-                    str_result += " Err. #{} Reserved".format(
-                        self.data[6 + (i * 2)])
+                    str_result += f" Err. #{self.data[6 + (i * 2)]} Reserved"
                     # Erreur
                 elif self.data[6 + (i * 2)] < 41:
-                    str_result += "{} ".format(
-                        self.CV_Error_Code[self.data[6 + (i * 2)]])
+                    str_result += f"{self.CV_Error_Code[self.data[6 + (i * 2)]]} "
                 else:
-                    str_result += "not identified"
+                    str_result += "unidentified"
             i += 1
         return str_events + str_result
 
@@ -608,32 +608,29 @@ class Hla(HighLevelAnalyzer):
         Returns :
             Une chaine de caractères contenant l'interprétation du buffer
         """
-        str_events = "# Events {} ".format(self.data[4])
+        str_events = f"# Events {self.data[4]} "
         i = 0
         str_result = ""
         while i < 5:
-            str_result += " - Result {} : ".format(i + 1)
+            str_result += f" - Result {i + 1} : "
             if self.data[5 + (i * 2)] > 0:
                 # bill accepted
                 if self.data[6 + (i * 2)] == 1:
-                    str_result += "Bill {} in escrow".format(self.data[5 + (i * 2)])
+                    str_result += f"Bill {self.data[5 + (i * 2)]} in escrow"
                 else:
-                    str_result += "Bill {} in cash box".format(
-                        self.data[5 + (i * 2)])
+                    str_result += f"Bill {self.data[5 + (i * 2)]} in cash box"
             else:
                 if self.data[6 + (i * 2)] < 22:
-                    str_result += "Code {} : {}".format(self.data[6 + (i * 2)],
-                                                        self.BILL_Error_Code[self.data[6 + (i * 2)]]
-                                                        )
+                    str_result += f"Code {self.data[6 + (i * 2)]} : {self.BILL_Error_Code[self.data[6 + (i * 2)]]}"
                 else:
-                    str_result += "Code {} : inconnu".format(self.data[6 + (i * 2)])
+                    str_result += f"Code {self.data[6 + (i * 2)]} : inconnu"
             i += 1
         return str_events + str_result
 
     @property
     def _master2slave(self):
         """
-            Effectue l'interprétation des paramètres contenu dans le message du master
+            Effectue l'interprétation des paramètres contenus dans le message du master
 
         Returns :
             Une chaine de caractères contenant l'interprétation du message du master
@@ -645,13 +642,7 @@ class Hla(HighLevelAnalyzer):
                 (self.cc_Header == 222)):
             return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]"
         elif self.cc_Header == 231:
-            return (
-                    "Mask ["
-                    + bin(self.data[5])[2:].rjust(8, "0")
-                    + "|"
-                    + bin(self.data[4])[2:].rjust(8, "0")
-                    + "]"
-            )
+            return "Mask [" + bin(self.data[5])[2:].rjust(8, "0") + "|" + bin(self.data[4])[2:].rjust(8, "0") + "]"
         elif self.cc_Header == 228:
             str_result = "Master inh. "
             if (self.data[4]) & 1 == 1:
@@ -665,47 +656,47 @@ class Hla(HighLevelAnalyzer):
                 str_pin = "Pin [{}][{}][{}][{}]"
             return str_pin.format(self.data[4], self.data[5], self.data[6], self.data[7])
         elif self.cc_Header == 215:
-            return "Blk. no. [{}]".format(self.data[4])
+            return f"Blk. no. [{self.data[4]}]"
         elif self.cc_Header == 214:
-            str_result = "Blk. no. {} values [ ".format(self.data[4])
+            str_result = f"Blk. no. {self.data[4]} values [ "
             i = 0
             while i < (self.data[1] - 1):
-                str_result += "{} ".format(self.data[5 + i])
+                str_result += f"{self.data[5 + i]} "
                 i += 1
             str_result += "]"
             return str_result
         elif self.cc_Header == 211:
             power_option = ["normal", "switch to low",
                             "switch to full", "shutdown"]
-            return "P. opt. {}".format(power_option[self.data[4]])
+            return f"P. opt. {power_option[self.data[4]]}"
         elif self.cc_Header == 210:
-            str_result = "Coin pos.{} Path_1 {} ".format(self.data[4], self.data[5])
+            str_result = f"Coin pos.{self.data[4]} Path_1 {self.data[5]} "
             if (self.data[1]) == 5:
                 str_result += f"Path_2 {self.data[6]} Path_3 {self.data[7]} Path_4 {self.data[8]}"
             return str_result
         elif self.cc_Header == 209:
-            return "Coin pos. {}".format(self.data[4])
+            return f"Coin pos. {self.data[4]}"
         elif self.cc_Header == 204:
             str_meter = ["Set", "Inc", "Dec", "Reset", "Read"]
             str_result = str_meter[self.data[4]]
             if self.data[1] == 0:
-                str_result += " {} ".format(self.data[5] + self.data[6] * 256 + self.data[7] * 65536)
+                str_result += f" {self.data[5] + self.data[6] * 256 + self.data[7] * 65536} "
             return str_result
         elif (self.cc_Header == 217) and (self.data[1] == 1):
-            return "Hopper no. {}".format(self.data[4])
+            return f"Hopper no. {self.data[4]}"
         elif self.cc_Header == 208:
             if self.data[1] == 2:
-                return "Coins {}".format(self._get_int)
+                return "Coins {self._get_int}"
             elif self.data[1] == 3:
-                return "Hopper {} - Coins {}".format(self.data[4], self.data[5] + self.data[6] + 256)
+                return f"Hopper {self.data[4]} - Coins {self.data[5] + self.data[6] + 256}"
             else:
                 return ""
         elif (self.cc_Header == 207) and (self.data[1] == 1):
-            return "Hopper {}".format(self.data[4])
+            return f"Hopper {self.data[4]}"
         elif self.cc_Header == 202:
-            str_result = "Pos. {}".format(self.data[4])
+            str_result = f"Pos. {self.data[4]}"
             if self.data[1] == 2:
-                str_result += "Orienta. {}".format(self.data[5])
+                str_result += f"Orienta. {self.data[5]}"
             return str_result
         elif self.cc_Header == 201:
             if self.data[4] == 0:
@@ -714,71 +705,58 @@ class Hla(HighLevelAnalyzer):
                 str_result = "Abort "
             return str_result
         elif self.cc_Header == 189:
-            return "Def. path {}".format(self.data[4])
+            return f"Def. path {self.data[4]}"
         elif self.cc_Header == 187:
             if self.data[1] == 2:
-                return "Capacity {}".format(self._get_int)
+                return f"Capacity {self._get_int}"
             else:
-                return "Hopper no. {} Capacity {}".format(
-                    self.data[4], self.data[5] + (self.data[6] * 256)
-                )
+                return f"Hopper no. {self.data[4]} Capacity {self.data[5] + (self.data[6] * 256)}"
         elif self.cc_Header == 186:
             if self.data[1] == 1:
-                return "Hopper no. {}".format(self.data[4])
+                return f"Hopper no. {self.data[4]}"
             else:
                 return ""
         elif self.cc_Header == 185:
-            return (
-                    "Coin pos. {} Id.".format(self.data[4])
-                    + chr(self.data[5])
-                    + chr(self.data[6])
-                    + "_"
-                    + chr(self.data[7])
-                    + chr(self.data[8])
-                    + chr(self.data[9])
-                    + "_"
-                    + chr(self.data[10])
-            )
+            return f"Coin pos. {self.data[4]} Id. {chr(self.data[5])}{chr(self.data[6])}_{chr(self.data[7])}\
+                    {chr(self.data[8])}{chr(self.data[9])}_{chr(self.data[10])}"
         elif self.cc_Header == 184:
-            return "Pos. {}".format(self.data[4])
+            return f"Pos. {self.data[4]}"
         elif self.cc_Header == 183:
-            str_result = "Pos. {} Cmd {} ".format(self.data[5], self.up_window_data[self.data[4]])
+            str_result = f"Pos. {self.data[5]} Cmd {self.up_window_data[self.data[4]]} "
             if (self.data[4] == 0) or (self.data[4] == 3):
                 str_result += " var."
                 i = 0
                 while i < self.data[1]:
-                    str_result += " {}".format(self.data[6] + i)
+                    str_result += f" {self.data[6] + i}"
                     i += 1
             elif self.data[4] == 1:
-                str_result += " Credit code {}".format(self.data[6])
+                str_result += f" Credit code {self.data[6]}"
             return str_result
         elif self.cc_Header == 181:
-            return "Pos. {} setting {}".format(self.data[4], self.data[5])
+            return f"Pos. {self.data[4]} setting {self.data[5]}"
         elif self.cc_Header == 180:
-            return "Pos. {}".format(self.data[4])
+            return f"Pos. {self.data[4]}"
         elif self.cc_Header == 179:
-            return "Bank select {} ".format(self.data[4])
+            return f"Bank select {self.data[4]} "
         elif self.cc_Header == 175:
             if self.data[1] == 2:
-                return "No. coins {} ".format(self._get_int)
+                return f"No. coins {self._get_int} "
             elif self.data[1] == 3:
-                return "Hopper {} No. coins {} ".format(
-                    self.data[4], self.data[5] + (self.data[6] * 256)
-                )
+                return f"Hopper {self.data[4]} No. coins {self.data[5] + (self.data[6] * 256)} "
             else:
                 return ""
         elif self.cc_Header == 174:
             if self.data[1] == 1:
-                return "Hopper {}".format(self.data[4])
+                return f"Hopper {self.data[4]}"
             else:
                 return ""
         elif self.cc_Header == 167:
             str_result = "Security code "
             i = 0
             while i < (self.data[1] - 1):
-                str_result += " {}".format(self.data[4 + i])
+                str_result += f" {self.data[4 + i]}"
                 i += 1
-            str_result += " No. of coins {}".format(self.data[4 + i])
+            str_result += f" No. of coins {self.data[4 + i]}"
             return str_result
         elif self.cc_Header == 164:
             str_result = "Payout {}"
@@ -787,44 +765,23 @@ class Hla(HighLevelAnalyzer):
             else:
                 return str_result.format("disable")
         elif self.cc_Header == 162:
-            return (
-                    " Current (Mask 1 ["
-                    + bin(self.data[4])[2:].rjust(8, "0")
-                    + "] Mask 2 ["
-                    + bin(self.data[5])[2:].rjust(8, "0")
-                    + "] Override mask ["
-                    + bin(self.data[6])[2:].rjust(8, "0")
-                    + "])"
-                    + " Next (Mask 1 ["
-                    + bin(self.data[7])[2:].rjust(8, "0")
-                    + "] Mask 2 ["
-                    + bin(self.data[8])[2:].rjust(8, "0")
-                    + "] Override mask ["
-                    + bin(self.data[9])[2:].rjust(8, "0")
-                    + "])"
-            )
+            return (" Current (Mask 1 [" + bin(self.data[4])[2:].rjust(8, "0") + "] Mask 2 [" +
+                    bin(self.data[5])[2:].rjust(8, "0") + "] Override mask [" + bin(self.data[6])[2:].rjust(8, "0") +
+                    "])" + " Next (Mask 1 [" + bin(self.data[7])[2:].rjust(8, "0") + "] Mask 2 [" +
+                    bin(self.data[8])[2:].rjust(8, "0") + "] Override mask [" + bin(self.data[9])[2:].rjust(8, "0") +
+                    "])")
         elif self.cc_Header == 161:
             str_result = "RNG : "
             i = 0
             while i < self.data[1]:
-                str_result += " {}".format(self.data[4 + i])
+                str_result += f" {self.data[4 + i]}"
                 i += 1
             return str_result
         elif self.cc_Header == 158:
-            return (
-                    "Bill. type {} Id.".format(self.data[4])
-                    + chr(self.data[5])
-                    + chr(self.data[6])
-                    + "_"
-                    + chr(self.data[7])
-                    + chr(self.data[8])
-                    + chr(self.data[9])
-                    + chr(self.data[10])
-                    + "_"
-                    + chr(self.data[11])
-            )
+            return f"Bill. type {self.data[4]} Id. {chr(self.data[5])}{chr(self.data[6])}_{chr(self.data[7])}\
+                        {chr(self.data[8])}{chr(self.data[9])}_{chr(self.data[10])}_{chr(self.data[11])}"
         elif self.cc_Header == 157:
-            return "Bill type {}".format(self.data[4])
+            return f"Bill type {self.data[4]}"
         elif (self.cc_Header == 156) or (self.cc_Header == 155):
             return "Country {:c}{:c}".format(self.data[4], self.data[5])
         elif self.cc_Header == 154:
@@ -843,61 +800,58 @@ class Hla(HighLevelAnalyzer):
             return str_result
         elif self.cc_Header == 151:
             if self.data[5] < 3:
-                return " Lamp {} control {}".format(self.data[4], self.lamp_control[self.data[5]])
+                return f" Lamp {self.data[4]} control {self.lamp_control[self.data[5]]}"
             elif self.data[5] > 9:
-                return " Lamp {} flash every {} ms".format(self.data[4], self.data[5] * 20)
+                return f" Lamp {self.data[4]} flash every {self.data[5] * 20} ms"
             else:
                 return ""
         elif self.cc_Header == 150:
-            return " Pos. {}".format(self.data[4])
+            return f" Pos. {self.data[4]}"
         elif self.cc_Header == 149:
-            return " Error type {}".format(self.data[4])
+            return f" Error type {self.data[4]}"
         elif self.cc_Header == 146:
             return "Motor mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]" + \
-                "Direction mask [" + bin(self.data[5])[2:].rjust(
-                    8, "0") + "]" + "Speed " + str(self.data[6])
+                "Direction mask [" + bin(self.data[5])[2:].rjust(8, "0") + "]" + "Speed " + str(self.data[6])
         elif (self.cc_Header == 145) and (self.data[1] == 2):
             return "Country {:c}{:c}".format(self.data[4], self.data[5])
         elif (self.cc_Header == 144) or (self.cc_Header == 140):
-            str_result = "Block {} line {}".format(self.data[4], self.data[5])
+            str_result = f"Block {self.data[4]} line {self.data[5]}"
             i = 0
             while i < self.data[1] - 2:
-                str_result += " {}".format(self.data[6] + i)
+                str_result += f" {self.data[6] + i}"
                 i += 1
             return str_result
         elif ((self.cc_Header == 141) or (self.cc_Header == 139)) and (self.data[1] == 1):
-            return "Module {} ".format(self.data[4])
+            return f"Module {self.data[4]} "
         elif self.cc_Header == 137:
-            return "Code [0X{}{}] [0X{}{}] [0X{}{}]".format(self.data[5], self.data[4], self.data[7], self.data[8],
-                                                            self.data[9], self.data[8])
+            return f"Code [0X{self.data[5]}{self.data[4]}] [0X{self.data[7]}{self.data[6]}] [0X{self.data[9]}\
+                    {self.data[8]}]"
         elif self.cc_Header == 135:
-            return "no. coins {}".format(self.data[4])
+            return f"no. coins {self.data[4]}"
         elif self.cc_Header == 134:
-            return "Code [0X{}{}] [0X{}{}] [0X{}{}] no. of coins {}".format(self.data[5], self.data[4], self.data[7],
-                                                                            self.data[6], self.data[9],
-                                                                            self.data[8],
-                                                                            self.data[10] + (self.data[11] * 256))
+            return f"Code [0X{self.data[4]}{self.data[5]}] [0X{self.data[6]}{self.data[7]}] [0X{self.data[8]}\
+                    {self.data[9]}] no. of coins {self.data[10] + (self.data[11] * 256)}"
         elif (self.cc_Header == 131) or (self.cc_Header == 130):
-            return "No coin {}".format(self.data[4])
+            return f"No coin {self.data[4]}"
         elif self.cc_Header == - 125:
-            return "To pay " + self.get_dword
+            return f"To pay {self.get_dword}"
         elif self.cc_Header == 121:
-            return "Hopper {} no {}".format(self.data[4], self.data[5])
+            return f"Hopper {self.data[4]} no {self.data[5]}"
         elif self.cc_Header == 120:
-            return "Hopper {} no {}".format(self.data[4], (self.data[5] + (self.data[6] * 256)))
+            return f"Hopper {self.data[4]} no {self.data[5] + (self.data[6] * 256)}"
         elif self.cc_Header == 119:
-            return "Hopper ".format(self.data[4])
+            return f"Hopper {self.data[4]}"
         elif self.cc_Header == 118:
-            return "Cash box value " + self.get_dword
+            return f"Cash box value {self.get_dword}"
         elif self.cc_Header == 116:
             return str(datetime.datetime.fromtimestamp(self._get_int))
         elif self.cc_Header == 113:
-            return "Op. {} {}".format(self.baud_rate_OP[self.data[4]], self.baud_rate_code[self.data[5]])
+            return f"Op. {self.baud_rate_OP[self.data[4]]} {self.baud_rate_code[self.data[5]]}"
         elif self.cc_Header == 107:
             if self.data[4] == 0:
-                "Accept"
+                "Div. accept"
             else:
-                "Return"
+                "Div. Return"
         elif self.cc_Header == 104:
             if self.data[4] == 0:
                 return "Report service status"
@@ -920,23 +874,23 @@ class Hla(HighLevelAnalyzer):
             if self.data[4] == 0:
                 return "Special case"
             elif self.data[4] == 1:
-                return "{}ms".format(self.data[5])
+                return f"{self.data[5]}ms"
             elif self.data[4] == 2:
-                return "{}ms".format(self.data[5] * 10)
+                return f"{self.data[5] * 10}ms"
             elif self.data[4] == 3:
-                return "{}s".format(self.data[5])
+                return f"{self.data[5]}s"
             elif self.data[4] == 4:
-                return "{}m".format(self.data[5])
+                return f"{self.data[5]}m"
             elif self.data[4] == 5:
-                return "{}h".format(self.data[5])
+                return f"{self.data[5]}h"
             elif self.data[4] == 6:
-                return "{}d".format(self.data[5])
+                return f"{self.data[5]}d"
             elif self.data[4] == 7:
-                return "{}w".format(self.data[5])
+                return f"{self.data[5]}w"
             elif self.data[4] == 8:
-                return "{}M".format(self.data[5])
+                return f"{self.data[5]}M"
             elif self.data[4] == 9:
-                return "{}Y".format(self.data[5])
+                return f"{self.data[5]}Y"
             else:
                 return "Undetermined"
         elif self.cc_Header == 248:
@@ -955,24 +909,16 @@ class Hla(HighLevelAnalyzer):
               (self.cc_Header == 145)):
             return self._get_ascii
         elif self.cc_Header == 243:
-            return "Data base {}".format(self.data[4])
+            return f"Data base {self.data[4]}"
         elif self.cc_Header == 242:
-            return "S.N. {} ".format(self._get_int)
-        elif (
-                (self.cc_Header == 237)
-                or (self.cc_Header == 236)
-                or (self.cc_Header == 221)
-                or (self.cc_Header == 217)
-        ):
+            return f"S.N. {self._get_int} "
+        elif ((self.cc_Header == 237) or
+              (self.cc_Header == 236) or
+              (self.cc_Header == 221) or
+              (self.cc_Header == 217)):
             return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]"
         elif (self.cc_Header == 230) or (self.cc_Header == 212):
-            return (
-                    "Mask ["
-                    + bin(self.data[5])[2:].rjust(8, "0")
-                    + "|"
-                    + bin(self.data[4])[2:].rjust(8, "0")
-                    + "]"
-            )
+            return "Mask [" + bin(self.data[5])[2:].rjust(8, "0") + "|" + bin(self.data[4])[2:].rjust(8, "0") + "]"
         elif self.cc_Header == 229:
             return self._decode_buffer_cv
         elif self.cc_Header == 227:
@@ -982,9 +928,9 @@ class Hla(HighLevelAnalyzer):
             else:
                 return str_result + "disabled"
         elif self.cc_Header == 226:
-            return "Insert counter {} ".format(self._get_int)
+            return f"Insert counter {self._get_int} "
         elif (self.cc_Header == 225) or (self.cc_Header == 150):
-            return "Accept counter {} ".format(self._get_int)
+            return f"Accept counter {self._get_int} "
         elif self.cc_Header == 216:
             str_result = [
                 "vola. L.O.R",
@@ -1000,7 +946,7 @@ class Hla(HighLevelAnalyzer):
             i = 0
             str_result = "[ "
             while i < self.data[1]:
-                str_result += "{} ".format(self.data[i + 4])
+                str_result += f"{self.data[i + 4]} "
                 i += 1
             return str_result + "]"
         elif self.cc_Header == 213:
@@ -1009,107 +955,96 @@ class Hla(HighLevelAnalyzer):
                     0: "Coin pos.",
                     1: "CVF",
                 }
-                return "Code format {}".format(code_format[self.data[4] & 1])
+                return f"Code format {code_format[self.data[4] & 1]}"
             else:
                 return "Mask [" + self.data[4][2:].rjust(8, "0") + "]"
         elif self.cc_Header == 209:
-            str_result = "Path 1 {}".format(self.data[4])
+            str_result = f"Path 1 {self.data[4]}"
             if self.data[1] == 4:
-                str_result += "Path 2 {} Path 3 {} Path 4 {}".format(
-                    self.data[5], self.data[6], self.data[7]
-                )
+                str_result += f"Path 2 {self.data[5]} Path 3 {self.data[6]} Path 4 {self.data[7]}"
             return str_result
         elif self.cc_Header == 232:
-            str_result = "fault {}".format(self.fault_code[self.data[4]])
+            str_result = f"fault {self.fault_code[self.data[4]]}"
             if self.data[1] == 2:
-                str_result += " info {}".format(self.extra_info[self.data[5]])
+                str_result += f" info {self.extra_info[self.data[5]]}"
             return str_result
         elif self.cc_Header == 207:
-            return "Coins {} ".format(self._get_int)
+            return f"Coins {self._get_int} "
         elif self.cc_Header == 204:
-            return "Meter {} ".format(self._get_int)
+            return f"Meter {self._get_int} "
         elif self.cc_Header == 201:
-            return "# coins {} status {}".format(self.data[4], self.teach_status_code[self.data[5]])
+            return f"# coins {self.data[4]} status {self.teach_status_code[self.data[5]]}"
         elif self.cc_Header == 197:
-            return "Chk 1 {} Chk 2 {} Chk 3 {} Chk {}".format(
-                self.data[4], self.data[5], self.data[6], self.data[7]
-            )
+            return f"Chk 1 {self.data[4]} Chk 2 {self.data[5]} Chk 3 {self.data[6]} Chk {self.data[7]}"
         elif (self.cc_Header == 196) or (self.cc_Header == 195):
             return self._decode_date
         elif self.cc_Header == 194:
-            return "Rej. counter {} ".format(self._get_int)
+            return f"Rej. counter {self._get_int} "
         elif self.cc_Header == 193:
-            return "Fraud. counter {} ".format(self._get_int)
+            return f"Fraud. counter {self._get_int} "
         elif self.cc_Header == 192:
-            return "Build " + self._get_ascii
+            return f"Build {self._get_ascii}"
         elif self.cc_Header == 188:
-            return "Def. path {} ".format(self.data[4])
+            return f"Def. path {self.data[4]} "
         elif self.cc_Header == 186:
-            return "No. coins {} ".format(self.data[4] + (self.data[5] * 256))
+            return f"No. coins {self._get_int} "
         elif self.cc_Header == 184:
-            return (
-                    "Id . "
-                    + chr(self.data[4])
-                    + chr(self.data[5])
-                    + "_"
-                    + chr(self.data[6])
-                    + chr(self.data[7])
-                    + chr(self.data[8])
-                    + "_"
-                    + chr(self.data[9])
-            )
+            i = 4
+            while i < 10:
+                if (self.data[i] == 123) or (self.data[i] == 125) or (self.data[i] == 91) or (self.data[i] == 93):
+                    self.data[i] = 32
+                i += 1
+            return f"Id. {chr(self.data[4])}{chr(self.data[5])}_{chr(self.data[6])}{chr(self.data[7])}\
+                    {chr(self.data[8])}_{chr(self.data[9])}"
         elif self.cc_Header == 182:
             str_result = "Calib. info "
             i = 0
             while i < self.data[1]:
-                str_result += " {}".format(self.data[4] + i)
+                str_result += f" {self.data[4] + i}"
                 i += 1
             return str_result
         elif self.cc_Header == 180:
-            return "Setting {} ".format(self.data[4])
+            return f"Setting {self.data[4]} "
         elif self.cc_Header == 178:
-            return "Bank select {} ".format(self.data[4])
+            return f"Bank select {self.data[4]} "
         elif self.cc_Header == 176:
-            return "Alarm counter {}".format(self.data[4])
+            return f"Alarm counter {self.data[4]}"
         elif self.cc_Header == 174:
-            return "No. coins {} ".format(self._get_int)
+            return f"No. coins {self._get_int} "
         elif self.cc_Header == 173:
-            str_result = "Temp. {} "
             if (self.data[4] and 128) == 128:
-                return str_result + "-".format(self.data[4])
+                return f"Temp. -{self.data[4]} "
             else:
-                return str_result.format(self.data[4])
+                return f"Temp. {self.data[4]} "
         elif self.cc_Header == 172:
-            return " Remaining {} ".format(self.data[4])
+            return f"Remaining {self.data[4]} "
         elif self.cc_Header == 170:
-            return "Base year {}{}{}{}".format(
-                chr(self.data[4]), chr(self.data[5]), chr(self.data[6]), chr(self.data[7])
-            )
+            self.base_year = int(chr(self.data[4]) + chr(self.data[5]) + chr(self.data[6]) + chr(self.data[7]))
+            return f"Base year {chr(self.data[4])}{chr(self.data[5])}{chr(self.data[6])}{chr(self.data[7])}"
         elif self.cc_Header == 169:
             return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]"
         elif self.cc_Header == 168:
-            return "Dispensed {} ".format(self._get_int)
+            return f"Dispensed {self._get_int} "
         elif self.cc_Header == 167:
             if (self.data[1]) == 1:
-                return "Event count. {}".format(self.data[4])
+                return f"Event count. {self.data[4]}"
             else:
                 return ""
         elif self.cc_Header == 166:
-            return "Events {} Remaining {} Last paid {} Last unpaid {} ".format(
-                self.data[4], self.data[5], self.data[6], self.data[7]
-            )
+            return f"Events {self.data[4]} Remaining {self.data[5]} Last paid {self.data[6]} \
+                     Last unpaid {self.data[7]} "
         elif self.cc_Header == 163:
             str_result = ""
             i = 0
             while i < self.data[1]:
-                str_result += "Mask {} ".format(i + 1) + "[" + bin(self.data[4 + i])[2:].rjust(8, "0") + "] "
+                str_result += f"Mask {i + 1} " + "[" + bin(self.data[4 + i])[2:].rjust(8, "0") + "] "
                 i += 1
             return str_result
         elif self.cc_Header == 160:
             str_result = "KEY :"
             i = 0
             while i < self.data[1]:
-                str_result += " {}".format(self.data[4 + i])
+                str_result += f" {self.data[4 + i]}"
                 i += 1
             return str_result
         elif self.cc_Header == 159:
@@ -1128,15 +1063,9 @@ class Hla(HighLevelAnalyzer):
                     + chr(self.data[10])
             )
         elif self.cc_Header == 156:
-            return "Scaling factor {} decimal {}".format(self._get_int, self.data[6])
+            return f"Scaling factor {self.data[4] + (self.data[5] * 256)} decimal {self.data[6]}"
         elif self.cc_Header == 155:
-            return (
-                    "Mask ["
-                    + bin(self.data[5])[2:].rjust(8, "0")
-                    + "|"
-                    + bin(self.data[4])[2:].rjust(8, "0")
-                    + "]"
-            )
+            return "Mask [" + bin(self.data[5])[2:].rjust(8, "0") + "|" + bin(self.data[4])[2:].rjust(8, "0") + "]"
         elif self.cc_Header == 154:
             return self.error_code[self.data[4]]
         elif self.cc_Header == 152:
@@ -1154,73 +1083,66 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 149:
             return " Error counter : {} ".format(self._get_int)
         elif self.cc_Header == 148:
-            str_result = "Opto voltages {}"
             if self.data[1] == 1:
-                return str_result.format(self.data[4])
+                return f" Opto voltages {self.data[4]}"
             else:
-                return str_result.format(self.data[4] + (self.data[5] * 256))
+                return f" Opto voltages {self._get_int}"
         elif self.cc_Header == 147:
             if self.data[1] == 1:
-                return "Error {}".format(self.error_code_stacker[self.data[4]])
+                return f"Error {self.error_code_stacker[self.data[4]]}"
             else:
                 return ""
         elif self.cc_Header == 141:
-            return "FW option {} ".format(self.data[4])
+            return f"FW option {self.data[4]} "
         elif (self.cc_Header == 134) and (self.data[1] == 1):
-            return "Events {} ".format(self.data[4])
+            return f"Events {self.data[4]} "
         elif self.cc_Header == 133:
-            return "Events {} remain. {} paid {} unpaid {} ".format(self.data[4], (self.data[5] + (self.data[6] * 256)),
-                                                                    (self.data[7] + (self.data[8] * 256)),
-                                                                    (self.data[9] + (self.data[10] * 256)))
+            return f"Events {self.data[4]} remain. {self.data[5] + (self.data[6] * 256)} \
+                            paid {self.data[7] + (self.data[8] * 256)} unpaid {self.data[9] + (self.data[10] * 256)} "
         elif self.cc_Header == 132:
-            return "remain. {} ".format(self._get_int)
+            return f"remain. {self._get_int} "
         elif (self.cc_Header == 131) or (self.cc_Header == 119):
             return "Id {:c}{:c}{:c}{:c}{:c}{:c}{}".format(self.data[4], self.data[5], self.data[6], self.data[7],
                                                           self.data[8], self.data[9],
                                                           (self.data[10] + self.data[11] * 256))
         elif self.cc_Header == 130:
-            return "Dispensed {} ".format(self._get_int)
+            return f"Dispensed {self._get_int} "
         elif (self.cc_Header == 128) and (self.cc_Header == 127):
-            return "Total {} ".format(self._get_int)
+            return f"Total {self._get_int} "
         elif self.cc_Header == 124:
-            return "Events {} {} {}".format(self.data[4],
-                                            self.data[5] + (self.data[6] * 256) + (self.data[7] * 65536) + (
-                                                    self.data[8] * 16777216),
-                                            self.data[9] + (self.data[10] * 256) + (self.data[11] * 65536) + (
-                                                    self.data[12] * 16777216))
+            return f"Events {self.data[4]} \
+                paid {self.data[5] + (self.data[6] * 256) + (self.data[7] * 65536) + (self.data[8] * 16777216)}\
+                unpaid {self.data[9] + (self.data[10] * 256) + (self.data[11] * 65536) + (self.data[12] * 16777216)}"
         elif self.cc_Header == 123:
             return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "|" + bin(self.data[5])[2:].rjust(8, "0") + "]"
         elif self.cc_Header == 122:
-            return "Device no. {} fault {}".format(self.data[4], self.data[5])
+            return f"Device no. {self.data[4]} fault {self.data[5]}"
         elif self.cc_Header == 117:
-            return "Value {} " + self.get_dword
+            return f"Value {self.get_dword} "
         elif self.cc_Header == 115:
-            return str(
-                datetime.datetime.fromtimestamp(
-                    self.data[4] + (self.data[5] * 256) + (self.data[6] * 65536) + (self.data[7] * 16777216)))
+            return str(datetime.datetime.fromtimestamp(self.data[4] + (self.data[5] * 256) + (self.data[6] * 65536) +
+                                                       (self.data[7] * 16777216)))
         elif self.cc_Header == 114:
-            return "VID_{} PID_{}".format(self.data[4] + (self.data[5] * 256), self.data[6] + (self.data[7] * 256))
+            return f"VID_{self.data[4] + (self.data[5] * 256)} PID_{self.data[6] + (self.data[7] * 256)}"
         elif (self.cc_Header == 113) and (self.data[1] == 1):
-            return "Speed {} ".format(self.baud_rate_code[self.data[4]])
+            return f"Speed {self.baud_rate_code[self.data[4]]} "
         elif self.cc_Header == 106:
-            str_result = "Op. status {} ".format(
-                self.operating_status[self.data[4]])
+            str_result = f"Op. status {self.operating_status[self.data[4]]} "
             if self.data[5] == 0:
                 str_result += "empty "
             else:
                 str_result += "full "
-            str_result += "fault code {}".format(self.data[6])
+            str_result += f"fault code {self.data[6]}"
         elif self.cc_Header == 104:
             if self.data[1] == 1:
-                return self.service_status[self.data[4]]
+                return f"Service status {self.service_status[self.data[4]]}"
         elif self.cc_Header == 4:
             if (self.data[4]) > 47:
                 return "Release {:c} v{:c}.{:c}".format(self.data[4], self.data[5], self.data[6])
             else:
                 return "Release {} v{}.{}".format(self.data[4], self.data[5], self.data[6])
         elif self.cc_Header == 2:
-            return "RX : timeouts {}, bytes ignored {}, bad checksum {}".format(self.data[4], self.data[5],
-                                                                                self.data[6])
+            return f"RX : timeouts {self.data[4]}, bytes ignored {self.data[5]}, bad checksum {self.data[6]}"
         else:
             return ""
 
@@ -1256,20 +1178,19 @@ class Hla(HighLevelAnalyzer):
                 if self.isMaster2Slave:
                     if (self.len_data == 3) and (self.device_category != self.str_bv) and (self.data[2] != 1):
                         raise
-                    else:
-                        print("\ndata ", self.data)
 
                     if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
-                        self.len_data = self.cc_Header = 0
                         self.isRequest = True
+                        self.len_data = self.cc_Header = 0
                         str_header = "unknown"
                         if (self.data[3]) in self.header:
                             str_header = self.header[self.data[3]]
                             self.cc_Header = self.data[3]
-
                         if self.device_category == self.str_bv:
                             check_result = self._crc_16
                             check_ok = check_result == self.data[2] + (self.data[-1] * 256)
+                            if (not check_ok) and (str_header == "unknown"):
+                                raise
                             str_frame = ("{}({}) - # param.({}) - LSB CRC({}) - {}({}) - param." +
                                          self._get_param + self._master2slave +
                                          " - MSB CRC({}) ")
@@ -1284,6 +1205,8 @@ class Hla(HighLevelAnalyzer):
                         else:
                             check_result = self._checksum
                             check_ok = (check_result == self.data[-1])
+                            if (not check_ok) and (str_header == "unknown"):
+                                raise
                             str_frame = ("{}({}) - # param.({}) - Master({}) - {}({}) - param." +
                                          self._get_param + self._master2slave + " ")
                             return AnalyzerFrame(str_frame.format(self.device_category, self.data[0], self.data[1],

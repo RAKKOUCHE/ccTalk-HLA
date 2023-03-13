@@ -269,14 +269,6 @@ class Hla(HighLevelAnalyzer):
         255: "Completed",
     }
 
-    up_window_data = {
-        0: "Program coin",
-        1: "Modif credit code",
-        2: "Delete coin",
-        3: "Program token",
-        4: "Delete token",
-    }
-
     acknowledge = {
         0: "ACK",
         5: "NAK",
@@ -477,10 +469,9 @@ class Hla(HighLevelAnalyzer):
         Returns :
             le checksum sur 1 octet de la trame - le dernier octet
         """
-        result = loop = 0
-        while loop < self.data[1] + 4:
-            result += self.data[loop]
-            loop += 1
+        result = 0
+        for value in self.data[0:-1]:
+            result += value
         return 256 - (result % 256)
 
     @property
@@ -490,9 +481,8 @@ class Hla(HighLevelAnalyzer):
         Returns :
             CRC sur 2 octets
         """
-        list_locale = list(self.data)
-        list_locale.pop(2)
-        list_locale.pop()
+
+        list_locale = self.data[0:2] + self.data[3:-1]
         word_crc = i = 0
         while i < len(list_locale):
             word_crc ^= (list_locale[i] << 8)
@@ -516,15 +506,10 @@ class Hla(HighLevelAnalyzer):
             affichée
 
         """
-        list_result = []
-        position = 4
-        while position < (4 + self.data[1]):
-            list_result.append(self.data[position])
-            position += 1
-        str_result = str(list_result)
+        str_result = str(self.data[4:-1])
         if self.data[1] > 0:
             str_result += "->"
-        return str_result + ""
+        return str_result + " "
 
     @property
     def _get_ascii(self):
@@ -532,7 +517,9 @@ class Hla(HighLevelAnalyzer):
             Convertit les paramètres en chaines de caractères
         Returns :
             Une chaine de caractères contenant les caractères ascii des paramètres
+
         """
+
         i = 0
         str_id = " "
         while i < self.data[1]:
@@ -635,105 +622,127 @@ class Hla(HighLevelAnalyzer):
         Returns :
             Une chaine de caractères contenant l'interprétation du message du master
         """
-        if ((self.cc_Header == 240) or
-                (self.cc_Header == 239) or
-                (self.cc_Header == 238) or
-                (self.cc_Header == 233) or
-                (self.cc_Header == 222)):
-            return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]"
+        # 240 Test solenoid, 239 Operate motors, 238 Test output lines, 233 Latch out lines, 222 Modify sorter
+        # override status
+        if self.cc_Header in [240, 239, 238, 233, 222]:
+            return f"Mask [{bin(self.data[4])[2:].rjust(8, '0')}]"
+
+        # Modify inhibit status
         elif self.cc_Header == 231:
-            return "Mask [" + bin(self.data[5])[2:].rjust(8, "0") + "|" + bin(self.data[4])[2:].rjust(8, "0") + "]"
+            return f"Mask [{bin(self.data[5])[2:].rjust(8, '0')} / {bin(self.data[4])[2:].rjust(8, '0')}]"
+
+        # Modify master inhibit status
         elif self.cc_Header == 228:
-            str_result = "Master inh. "
-            if (self.data[4]) & 1 == 1:
-                return str_result + "enabled"
-            else:
-                return str_result + "disabled"
-        elif (self.cc_Header == 219) or (self.cc_Header == 218):
+            return str(['activated', 'norm. op.'][self.data[4] & 1])
+
+        # 219 Enter new PIN, 218 Enter PIN
+        elif self.cc_Header in [219, 218]:
             if self.data[4] > 47:
                 str_pin = "Pin [{:c}][{:c}][{:c}][{:c}]"
             else:
                 str_pin = "Pin [{}][{}][{}][{}]"
             return str_pin.format(self.data[4], self.data[5], self.data[6], self.data[7])
+
+        # Request payout high / low status
+        elif (self.cc_Header == 217) and (self.data[1] == 1):
+            return f"Hopper no. {self.data[4]}"
+
+        # Read data block
         elif self.cc_Header == 215:
-            return f"Blk. no. [{self.data[4]}]"
+            return f"Blk. no. {self.data[4]}"
+
+        # Write data block
         elif self.cc_Header == 214:
-            str_result = f"Blk. no. {self.data[4]} values [ "
-            i = 0
-            while i < (self.data[1] - 1):
-                str_result += f"{self.data[5 + i]} "
-                i += 1
-            str_result += "]"
-            return str_result
+            return f"Blk. no. {self.data[4]} values {str(self.data[5:-1])} "
+
+        # Request coin position
+        elif self.cc_Header == 212:
+            return f"coin {self.data[4]}"
+
+        # Power management control
         elif self.cc_Header == 211:
-            power_option = ["normal", "switch to low",
-                            "switch to full", "shutdown"]
-            return f"P. opt. {power_option[self.data[4]]}"
+            return f"Pow. opt. : {['normal', 'switch to low', 'switch to full', 'shutdown'][self.data[4]]}"
+
+        # Modify sorter paths
         elif self.cc_Header == 210:
             str_result = f"Coin pos.{self.data[4]} Path_1 {self.data[5]} "
             if (self.data[1]) == 5:
                 str_result += f"Path_2 {self.data[6]} Path_3 {self.data[7]} Path_4 {self.data[8]}"
             return str_result
+
+        # Request sorter paths
         elif self.cc_Header == 209:
             return f"Coin pos. {self.data[4]}"
-        elif self.cc_Header == 204:
-            str_meter = ["Set", "Inc", "Dec", "Reset", "Read"]
-            str_result = str_meter[self.data[4]]
-            if self.data[1] == 0:
-                str_result += f" {self.data[5] + self.data[6] * 256 + self.data[7] * 65536} "
-            return str_result
-        elif (self.cc_Header == 217) and (self.data[1] == 1):
-            return f"Hopper no. {self.data[4]}"
+
+        # Modify payout absolute count
         elif self.cc_Header == 208:
             if self.data[1] == 2:
-                return "Coins {self._get_int}"
+                return f"Coins {self._get_int}"
             elif self.data[1] == 3:
                 return f"Hopper {self.data[4]} - Coins {self.data[5] + self.data[6] + 256}"
-            else:
-                return ""
+
+        # Request payout absolute count
         elif (self.cc_Header == 207) and (self.data[1] == 1):
             return f"Hopper {self.data[4]}"
+
+        # Meter control
+        elif self.cc_Header == 204:
+            str_result = f"{['Set', 'Inc.', 'Dec.', 'Reset', 'Read'][self.data[4]]} meter"
+            if self.data[4] == 0:
+                str_result += f"{self.data[5] + self.data[6] * 256 + self.data[7] * 65536}"
+            return str_result
+
+        # TODO display control
+
+        # Teach mode control
         elif self.cc_Header == 202:
             str_result = f"Pos. {self.data[4]}"
             if self.data[1] == 2:
-                str_result += f"Orienta. {self.data[5]}"
+                str_result += f" Orienta. {self.data[5]} "
             return str_result
+
+        # Request teach status
         elif self.cc_Header == 201:
-            if self.data[4] == 0:
-                str_result = "Default "
-            else:
-                str_result = "Abort "
-            return str_result
+            return ['Default', 'Abort'][self.data[4]]
+
+        # Modify default sorter path
         elif self.cc_Header == 189:
             return f"Def. path {self.data[4]}"
+
+        # Modify payout capacity
         elif self.cc_Header == 187:
             if self.data[1] == 2:
                 return f"Capacity {self._get_int}"
             else:
                 return f"Hopper no. {self.data[4]} Capacity {self.data[5] + (self.data[6] * 256)}"
-        elif self.cc_Header == 186:
-            if self.data[1] == 1:
-                return f"Hopper no. {self.data[4]}"
-            else:
-                return ""
+
+        # Request payout capacity
+        elif (self.cc_Header == 186) and (self.data[1] == 1):
+            return f"Hopper no. {self.data[4]}"
+
+        # Modify coin id
         elif self.cc_Header == 185:
             return f"Coin pos. {self.data[4]} Id. {chr(self.data[5])}{chr(self.data[6])}_{chr(self.data[7])}\
                     {chr(self.data[8])}{chr(self.data[9])}_{chr(self.data[10])}"
+
+        # Request coin id
         elif self.cc_Header == 184:
             return f"Pos. {self.data[4]}"
+
+        # Request coin id
         elif self.cc_Header == 183:
-            str_result = f"Pos. {self.data[5]} Cmd {self.up_window_data[self.data[4]]} "
-            if (self.data[4] == 0) or (self.data[4] == 3):
-                str_result += " var."
-                i = 0
-                while i < self.data[1]:
-                    str_result += f" {self.data[6] + i}"
-                    i += 1
-            elif self.data[4] == 1:
+            str_result = f"Pos. {self.data[5]}\
+                {['Program coin', 'Modif credit code', 'Delete coin', 'Program token', 'Delete token'][self.data[4]]}"
+            if self.data[4] == 1:
                 str_result += f" Credit code {self.data[6]}"
+            elif self.data[4] in [0, 3]:
+                str_result += f" {self.data[6:-1]}"
             return str_result
+
+        # Modify security setting
         elif self.cc_Header == 181:
             return f"Pos. {self.data[4]} setting {self.data[5]}"
+
         elif self.cc_Header == 180:
             return f"Pos. {self.data[4]}"
         elif self.cc_Header == 179:
@@ -834,7 +843,7 @@ class Hla(HighLevelAnalyzer):
         elif (self.cc_Header == 131) or (self.cc_Header == 130):
             return f"No coin {self.data[4]}"
         elif self.cc_Header == - 125:
-            return f"To pay {self.get_dword}"
+            return f"To pay {self._get_int}"
         elif self.cc_Header == 121:
             return f"Hopper {self.data[4]} no {self.data[5]}"
         elif self.cc_Header == 120:
@@ -842,7 +851,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 119:
             return f"Hopper {self.data[4]}"
         elif self.cc_Header == 118:
-            return f"Cash box value {self.get_dword}"
+            return f"Cash box value {self._get_int}"
         elif self.cc_Header == 116:
             return str(datetime.datetime.fromtimestamp(self._get_int))
         elif self.cc_Header == 113:
@@ -917,16 +926,19 @@ class Hla(HighLevelAnalyzer):
               (self.cc_Header == 221) or
               (self.cc_Header == 217)):
             return "Mask [" + bin(self.data[4])[2:].rjust(8, "0") + "]"
+
+        # Request coin position
         elif (self.cc_Header == 230) or (self.cc_Header == 212):
-            return "Mask [" + bin(self.data[5])[2:].rjust(8, "0") + "|" + bin(self.data[4])[2:].rjust(8, "0") + "]"
+            return f"Mask [{bin(self.data[5])[2:].rjust(8, '0')} / {bin(self.data[4])[2:].rjust(8, '0')}]"
+
         elif self.cc_Header == 229:
             return self._decode_buffer_cv
         elif self.cc_Header == 227:
             str_result = "Master inh. "
-            if (self.data[4]) & 1 == 1:
-                return str_result + "enabled"
+            if not (self.data[4] & 1):
+                return str_result + "activated"
             else:
-                return str_result + "disabled"
+                return str_result + "norm. op."
         elif self.cc_Header == 226:
             return f"Insert counter {self._get_int} "
         elif (self.cc_Header == 225) or (self.cc_Header == 150):
@@ -942,13 +954,12 @@ class Hla(HighLevelAnalyzer):
                 ", [rd blocks {} | rd bytes/block {}], [wr blocks {} | wr bytes/block {}]".format(
                     self.data[5], self.data[6], self.data[7], self.data[8]
                 )
+
+        # Read data block
         elif self.cc_Header == 215:
-            i = 0
-            str_result = "[ "
-            while i < self.data[1]:
-                str_result += f"{self.data[i + 4]} "
-                i += 1
-            return str_result + "]"
+            return f"Values {self.data[4:-1]}"
+
+        # Request option flags
         elif self.cc_Header == 213:
             if self.device_category == self.str_cv:
                 code_format = {
@@ -1118,7 +1129,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 122:
             return f"Device no. {self.data[4]} fault {self.data[5]}"
         elif self.cc_Header == 117:
-            return f"Value {self.get_dword} "
+            return f"Value {self._get_int} "
         elif self.cc_Header == 115:
             return str(datetime.datetime.fromtimestamp(self.data[4] + (self.data[5] * 256) + (self.data[6] * 65536) +
                                                        (self.data[7] * 16777216)))

@@ -693,6 +693,8 @@ class Hla(HighLevelAnalyzer):
             return str_result
 
         # TODO display control
+        elif self.header == 203:
+            pass
 
         # Teach mode control
         elif self.cc_Header == 202:

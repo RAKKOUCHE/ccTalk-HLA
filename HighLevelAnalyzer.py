@@ -396,14 +396,40 @@ class Hla(HighLevelAnalyzer):
     def __reset_frame(self):
         """
             Remise à zéro des informations de documentations de la trame
-        Returns :
-            None
-
         """
         self.len_data = 0
         self.start_time = None
         self.data = []
         return
+
+    def __get_int(self, index = 4, length = 2):
+        """
+            Calcule un nombre entier à partir des données contenues dans data
+        Args :
+            index : Position du MSB
+            length : Nombre d'octets à considérer
+
+        Returns :
+            Un nombre entier
+        """
+
+        int_result = self.data[index] + (self.data[index + 1] * 256)
+        if length > 2:
+            int_result += self.data[index + 2] * 65536
+        if length == 4:
+            int_result += self.data[index + 3] * 16777216
+        return int(int_result)
+
+    @property
+    def __get_device_address(self):
+        """
+            Getter de l'adresse du périphérique
+
+        Returns :
+            Adresse du périphérique
+        """
+        return self.device_address
+
 
     @property
     def __checksum(self):
@@ -468,23 +494,6 @@ class Hla(HighLevelAnalyzer):
         for c in self.data[4:-1]:
             str_ascii += chr(c)
         return str_ascii
-
-    def __get_int(self, index = 4, length = 2):
-        """
-            Calcule un nombre entier à partir des données contenues dans data
-        Args :
-            index : Position du MSB
-            length : Nombre d'octets à considérer
-
-        Returns :
-            Un nombre entier
-        """
-        int_result = self.data[index] + (self.data[index + 1] * 256)
-        if length > 2:
-            int_result += self.data[index + 2] * 65536
-        if length == 4:
-            int_result += self.data[index + 3] * 16777216
-        return int_result
 
     @property
     def __decode_date(self):

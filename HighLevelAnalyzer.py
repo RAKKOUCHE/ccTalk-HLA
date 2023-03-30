@@ -24,160 +24,317 @@ class Hla(HighLevelAnalyzer):
     Returns :
         AnalyzerFrame: description de la  trame
     """
+    # header = {
+    #     255: "Factory set-up and test",
+    #     254: "Simple poll",
+    #     253: "Address poll",
+    #     252: "Address clash",
+    #     251: "Address change",
+    #     250: "Address random",
+    #     249: "Request polling priority",
+    #     248: "Request status",
+    #     247: "Request variable set",
+    #     246: "Request manufacturer id",
+    #     245: "Request equipment category id",
+    #     244: "Request product code",
+    #     243: "Request database version",
+    #     242: "Request serial number",
+    #     241: "Request software revision",
+    #     240: "Test solenoids",
+    #     239: "Operate motors",
+    #     238: "Test output lines",
+    #     237: "Read input lines",
+    #     236: "Read opto states",
+    #     235: "Read DH public key",
+    #     234: "Send DH public key",
+    #     233: "Latch output lines",
+    #     232: "Perform self-check",
+    #     231: "Modify inhibit status",
+    #     230: "Request inhibit status",
+    #     229: "Read buffered credit or error codes",
+    #     228: "Modify master inhibit status",
+    #     227: "Request master inhibit status",
+    #     226: "Request insertion counter",
+    #     225: "Request accept counter",
+    #     224: "Request encrypted product id",
+    #     223: "Modify encrypted inhibit and override registers",
+    #     222: "Modify sorter override status",
+    #     221: "Request sorter override status",
+    #     220: "ACMI encrypted data",
+    #     219: "Enter new PIN number",
+    #     218: "Enter PIN number",
+    #     217: "Request payout high / low status",
+    #     216: "Request data storage availability",
+    #     215: "Read data block",
+    #     214: "Write data block",
+    #     213: "Request option flags",
+    #     212: "Request coin position",
+    #     211: "Power management control",
+    #     210: "Modify sorter paths",
+    #     209: "Request sorter paths",
+    #     208: "Modify payout absolute count",
+    #     207: "Request payout absolute count",
+    #     204: "Meter control",
+    #     203: "Display control",
+    #     202: "Teach mode control ",
+    #     201: "Request teach status",
+    #     200: "ACMI unencrypted product id",
+    #     199: "Configuration to EEPROM",
+    #     198: "Counters to EEPROM",
+    #     197: "Calculate ROM checksum",
+    #     196: "Request creation date",
+    #     195: "Request last modification date",
+    #     194: "Request reject counter",
+    #     193: "Request fraud counter",
+    #     192: "Request build code",
+    #     191: "Keypad control",
+    #     189: "Modify default sorter path",
+    #     188: "Request default sorter path",
+    #     187: "Modify payout capacity",
+    #     186: "Request payout capacity",
+    #     185: "Modify coin id",
+    #     184: "Request coin id",
+    #     183: "Upload window data",
+    #     182: "Download calibration info",
+    #     181: "Modify security setting",
+    #     180: "Request security setting",
+    #     179: "Modify bank select",
+    #     178: "Request bank select",
+    #     177: "Handheld function",
+    #     176: "Request alarm counter",
+    #     175: "Modify payout float",
+    #     174: "Request payout float",
+    #     173: "Request thermistor reading",
+    #     172: "Emergency stop",
+    #     171: "Request hopper coin",
+    #     170: "Request base year",
+    #     169: "Request address mode",
+    #     168: "Request hopper dispense count",
+    #     167: "Dispense hopper coins",
+    #     166: "Request hopper status",
+    #     165: "Modify variable set",
+    #     164: "Enable hopper",
+    #     163: "Test hopper",
+    #     162: "Modify inhibit and override registers",
+    #     161: "Pump RNG",
+    #     160: "Request cipher key",
+    #     159: "Read buffered bill events",
+    #     158: "Modify bill id",
+    #     157: "Request bill id",
+    #     156: "Request country scaling factor",
+    #     155: "Request bill position",
+    #     154: "Route bill",
+    #     153: "Modify bill operating mode",
+    #     152: "Request bill operating mode",
+    #     151: "Test lamps",
+    #     150: "Request individual accept counter",
+    #     149: "Request individual error counter",
+    #     148: "Read opto voltages",
+    #     147: "Perform stacker cycle",
+    #     146: "Operate bi-directional motors",
+    #     145: "Request currency revision",
+    #     144: "Upload bill tables",
+    #     143: "Begin bill table upgrade",
+    #     142: "Finish bill table upgrade",
+    #     141: "Request firmware upgrade capability",
+    #     140: "Upload firmware",
+    #     139: "Begin firmware upgrade",
+    #     138: "Finish firmware upgrade",
+    #     137: "Switch encryption code",
+    #     136: "Store encryption code",
+    #     135: "Set accept limit",
+    #     134: "Dispense hopper value",
+    #     133: "Request hopper polling value",
+    #     132: "Emergency stop value",
+    #     131: "Request hopper coin value",
+    #     130: "Request indexed hopper dispense count",
+    #     129: "Read barcode data",
+    #     128: "Request money in",
+    #     127: "Request money out",
+    #     126: "Clear money counters",
+    #     125: "Pay money out",
+    #     124: "Verify money out",
+    #     123: "Request activity register",
+    #     122: "Request error status",
+    #     121: "Purge hopper",
+    #     120: "Modify hopper balance",
+    #     119: "Request hopper balance",
+    #     118: "Modify cash box value",
+    #     117: "Request cash box value",
+    #     116: "Modify real time clock",
+    #     115: "Request real time clock",
+    #     114: "Request USB id",
+    #     113: "Switch baud rate",
+    #     112: "Read encrypted events",
+    #     111: "Request encryption support",
+    #     110: "Switch encryption key",
+    #     109: "Request encrypted hopper status",
+    #     108: "Request encrypted monetary id",
+    #     107: "Operate escrow",
+    #     106: "Request escrow status",
+    #     105: "Data stream",
+    #     104: "Request service status",
+    #     4: "Request comms revision",
+    #     3: "Clear comms status variables",
+    #     2: "Request comms status variables",
+    #     1: "Reset device",
+    # }
+
     header = {
-        255: "Factory set-up and test",
-        254: "Simple poll",
-        253: "Address poll",
-        252: "Address clash",
-        251: "Address change",
-        250: "Address random",
-        249: "Request polling priority",
-        248: "Request status",
-        247: "Request variable set",
-        246: "Request manufacturer id",
-        245: "Request equipment category id",
-        244: "Request product code",
-        243: "Request database version",
-        242: "Request serial number",
-        241: "Request software revision",
-        240: "Test solenoids",
-        239: "Operate motors",
-        238: "Test output lines",
-        237: "Read input lines",
-        236: "Read opto states",
-        235: "Read DH public key",
-        234: "Send DH public key",
-        233: "Latch output lines",
-        232: "Perform self-check",
-        231: "Modify inhibit status",
-        230: "Request inhibit status",
-        229: "Read buffered credit or error codes",
-        228: "Modify master inhibit status",
-        227: "Request master inhibit status",
-        226: "Request insertion counter",
-        225: "Request accept counter",
-        224: "Request encrypted product id",
-        223: "Modify encrypted inhibit and override registers",
-        222: "Modify sorter override status",
-        221: "Request sorter override status",
-        220: "ACMI encrypted data",
-        219: "Enter new PIN number",
-        218: "Enter PIN number",
-        217: "Request payout high / low status",
-        216: "Request data storage availability",
-        215: "Read data block",
-        214: "Write data block",
-        213: "Request option flags",
-        212: "Request coin position",
-        211: "Power management control",
-        210: "Modify sorter paths",
-        209: "Request sorter paths",
-        208: "Modify payout absolute count",
-        207: "Request payout absolute count",
-        204: "Meter control",
-        203: "Display control",
-        202: "Teach mode control ",
-        201: "Request teach status",
-        200: "ACMI unencrypted product id",
-        199: "Configuration to EEPROM",
-        198: "Counters to EEPROM",
-        197: "Calculate ROM checksum",
-        196: "Request creation date",
-        195: "Request last modification date",
-        194: "Request reject counter",
-        193: "Request fraud counter",
-        192: "Request build code",
-        191: "Keypad control",
-        189: "Modify default sorter path",
-        188: "Request default sorter path",
-        187: "Modify payout capacity",
-        186: "Request payout capacity",
-        185: "Modify coin id",
-        184: "Request coin id",
-        183: "Upload window data",
-        182: "Download calibration info",
-        181: "Modify security setting",
-        180: "Request security setting",
-        179: "Modify bank select",
-        178: "Request bank select",
-        177: "Handheld function",
-        176: "Request alarm counter",
-        175: "Modify payout float",
-        174: "Request payout float",
-        173: "Request thermistor reading",
-        172: "Emergency stop",
-        171: "Request hopper coin",
-        170: "Request base year",
-        169: "Request address mode",
-        168: "Request hopper dispense count",
-        167: "Dispense hopper coins",
-        166: "Request hopper status",
-        165: "Modify variable set",
-        164: "Enable hopper",
-        163: "Test hopper",
-        162: "Modify inhibit and override registers",
-        161: "Pump RNG",
-        160: "Request cipher key",
-        159: "Read buffered bill events",
-        158: "Modify bill id",
-        157: "Request bill id",
-        156: "Request country scaling factor",
-        155: "Request bill position",
-        154: "Route bill",
-        153: "Modify bill operating mode",
-        152: "Request bill operating mode",
-        151: "Test lamps",
-        150: "Request individual accept counter",
-        149: "Request individual error counter",
-        148: "Read opto voltages",
-        147: "Perform stacker cycle",
-        146: "Operate bi-directional motors",
-        145: "Request currency revision",
-        144: "Upload bill tables",
-        143: "Begin bill table upgrade",
-        142: "Finish bill table upgrade",
-        141: "Request firmware upgrade capability",
-        140: "Upload firmware",
-        139: "Begin firmware upgrade",
-        138: "Finish firmware upgrade",
-        137: "Switch encryption code",
-        136: "Store encryption code",
-        135: "Set accept limit",
-        134: "Dispense hopper value",
-        133: "Request hopper polling value",
-        132: "Emergency stop value",
-        131: "Request hopper coin value",
-        130: "Request indexed hopper dispense count",
-        129: "Read barcode data",
-        128: "Request money in",
-        127: "Request money out",
-        126: "Clear money counters",
-        125: "Pay money out",
-        124: "Verify money out",
-        123: "Request activity register",
-        122: "Request error status",
-        121: "Purge hopper",
-        120: "Modify hopper balance",
-        119: "Request hopper balance",
-        118: "Modify cash box value",
-        117: "Request cash box value",
-        116: "Modify real time clock",
-        115: "Request real time clock",
-        114: "Request USB id",
-        113: "Switch baud rate",
-        112: "Read encrypted events",
-        111: "Request encryption support",
-        110: "Switch encryption key",
-        109: "Request encrypted hopper status",
-        108: "Request encrypted monetary id",
-        107: "Operate escrow",
-        106: "Request escrow status",
-        105: "Data stream",
-        104: "Request service status",
-        4: "Request comms revision",
-        3: "Clear comms status variables",
-        2: "Request comms status variables",
-        1: "Reset device",
+        255: ["Factory set-up and test", 255, 255, ],
+        254: ["Simple poll", 0, 0, ],
+        253: ["Address poll", 0, 255, ],
+        252: ["Address clash", 0, 255, ],
+        251: ["Address change", 1, 0, ],
+        250: ["Address random", 0, 0, ],
+        249: ["Request polling priority", 0, 2, ],
+        248: ["Request status", 0, 1, ],
+        247: ["Request variable set", 0, 1, ],
+        246: ["Request manufacturer id", 0, 255, ],
+        245: ["Request equipment category id", 0, 255, ],
+        244: ["Request product code", 0, 255, ],
+        243: ["Request database version", 0, 1, ],
+        242: ["Request serial number", 0, 3, ],
+        241: ["Request software revision", 0, 255, ],
+        240: ["Test solenoids", 1, 0, ],
+        239: ["Operate motors", 1, 0, ],
+        238: ["Test output lines", 1, 0, ],
+        237: ["Read input lines", 0, 255, ],
+        236: ["Read opto states", 0, 1, ],
+        235: ["Read DH public key", 1, 255, ],
+        234: ["Send DH public key", 3, 0, ],
+        233: ["Latch output lines", 1, 0, ],
+        232: ["Perform self-check", 0, 255, ],
+        231: ["Modify inhibit status", 2, 0, ],
+        230: ["Request inhibit status", 0, 2, ],
+        229: ["Read buffered credit or error codes", 0, 11, ],
+        228: ["Modify master inhibit status", 1, 0, ],
+        227: ["Request master inhibit status", 0, 1, ],
+        226: ["Request insertion counter", 0, 3, ],
+        225: ["Request accept counter", 0, 3, ],
+        224: ["Request encrypted product id", 2, 32, ],
+        223: ["Modify encrypted inhibit and override registers", 13, 0, ],
+        222: ["Modify sorter override status", 1, 0, ],
+        221: ["Request sorter override status", 0, 1, ],
+        220: ["ACMI encrypted data", 255, 255, ],
+        219: ["Enter new PIN number", 4, 0, ],
+        218: ["Enter PIN number", 4, 0, ],
+        217: ["Request payout high / low status", 255, 1, ],
+        216: ["Request data storage availability", 0, 5, ],
+        215: ["Read data block", 1, 255, ],
+        214: ["Write data block", 255, 0, ],
+        213: ["Request option flags", 0, 1, ],
+        212: ["Request coin position", 1, 2, ],
+        211: ["Power management control", 1, 0, ],
+        210: ["Modify sorter paths", 255, 0, ],
+        209: ["Request sorter paths", 1, 255, ],
+        208: ["Modify payout absolute count", 255, 0, ],
+        207: ["Request payout absolute count", 255, 2, ],
+        204: ["Meter control", 255, 255, ],
+        203: ["Display control", 255, 255, ],
+        202: ["Teach mode control ", 255, 0, ],
+        201: ["Request teach status", 1, 2, ],
+        200: ["ACMI unencrypted product id", 1, 40, ],
+        199: ["Configuration to EEPROM", 0, 0, ],
+        198: ["Counters to EEPROM", 0, 0, ],
+        197: ["Calculate ROM checksum", 0, 4, ],
+        196: ["Request creation date", 0, 2, ],
+        195: ["Request last modification date", 0, 2, ],
+        194: ["Request reject counter", 0, 3, ],
+        193: ["Request fraud counter", 0, 3, ],
+        192: ["Request build code", 0, 255, ],
+        191: ["Keypad control", 1, 255, ],
+        189: ["Modify default sorter path", 1, 0, ],
+        188: ["Request default sorter path", 0, 1, ],
+        187: ["Modify payout capacity", 255, 0, ],
+        186: ["Request payout capacity", 1, 2, ],
+        185: ["Modify coin id", 7, 0, ],
+        184: ["Request coin id", 1, 6, ],
+        183: ["Upload window data", 255, 0, ],
+        182: ["Download calibration info", 0, 255, ],
+        181: ["Modify security setting", 2, 255, ],
+        180: ["Request security setting", 1, 1, ],
+        179: ["Modify bank select", 1, 0, ],
+        178: ["Request bank select", 0, 1, ],
+        177: ["Handheld function", 255, 255, ],
+        176: ["Request alarm counter", 0, 1, ],
+        175: ["Modify payout float", 255, 0, ],
+        174: ["Request payout float", 255, 2, ],
+        173: ["Request thermistor reading", 0, 1, ],
+        172: ["Emergency stop", 0, 1, ],
+        171: ["Request hopper coin", 0, 255, ],
+        170: ["Request base year", 0, 4, ],
+        169: ["Request address mode", 0, 1, ],
+        168: ["Request hopper dispense count", 0, 3, ],
+        167: ["Dispense hopper coins", 255, 255, ],
+        166: ["Request hopper status", 0, 4, ],
+        165: ["Modify variable set", 255, 0, ],
+        164: ["Enable hopper", 1, 0, ],
+        163: ["Test hopper", 0, 255, ],
+        162: ["Modify inhibit and override registers", 6, 0, ],
+        161: ["Pump RNG", 255, 0, ],
+        160: ["Request cipher key", 0, 255, ],
+        159: ["Read buffered bill events", 0, 11, ],
+        158: ["Modify bill id", 8, 0, ],
+        157: ["Request bill id", 1, 7, ],
+        156: ["Request country scaling factor", 2, 3, ],
+        155: ["Request bill position", 2, 255, ],
+        154: ["Route bill", 1, 255, ],
+        153: ["Modify bill operating mode", 1, 0, ],
+        152: ["Request bill operating mode", 0, 1, ],
+        151: ["Test lamps", 2, 0, ],
+        150: ["Request individual accept counter", 1, 3, ],
+        149: ["Request individual error counter", 1, 3, ],
+        148: ["Read opto voltages", 0, 255, ],
+        147: ["Perform stacker cycle", 0, 255, ],
+        146: ["Operate bi-directional motors", 3, 0, ],
+        145: ["Request currency revision", 255, 255, ],
+        144: ["Upload bill tables", 255, 0, ],
+        143: ["Begin bill table upgrade", 0, 0, ],
+        142: ["Finish bill table upgrade", 0, 0, ],
+        141: ["Request firmware upgrade capability", 255, 1, ],
+        140: ["Upload firmware", 255, 0, ],
+        139: ["Begin firmware upgrade", 255, 0, ],
+        138: ["Finish firmware upgrade", 0, 0, ],
+        137: ["Switch encryption code", 3, 0, ],
+        136: ["Store encryption code", 0, 0, ],
+        135: ["Set accept limit", 1, 0, ],
+        134: ["Dispense hopper value", 255, 255, ],
+        133: ["Request hopper polling value", 0, 7, ],
+        132: ["Emergency stop value", 0, 2, ],
+        131: ["Request hopper coin value", 1, 8, ],
+        130: ["Request indexed hopper dispense count", 1, 3, ],
+        129: ["Read barcode data", 0, 255, ],
+        128: ["Request money in", 0, 4, ],
+        127: ["Request money out", 0, 4, ],
+        126: ["Clear money counters", 0, 0, ],
+        125: ["Pay money out", 4, 0, ],
+        124: ["Verify money out", 0, 9, ],
+        123: ["Request activity register", 0, 2, ],
+        122: ["Request error status", 0, 2, ],
+        121: ["Purge hopper", 2, 0, ],
+        120: ["Modify hopper balance", 3, 0, ],
+        119: ["Request hopper balance", 1, 8, ],
+        118: ["Modify cash box value", 4, 0, ],
+        117: ["Request cash box value", 0, 4, ],
+        116: ["Modify real time clock", 4, 0, ],
+        115: ["Request real time clock", 0, 4, ],
+        114: ["Request USB id", 0, 4, ],
+        113: ["Switch baud rate", 2, 255, ],
+        112: ["Read encrypted events", 1, 16, ],
+        111: ["Request encryption support", 6, 20, ],
+        110: ["Switch encryption key", 16, 0, ],
+        109: ["Request encrypted hopper status", 3, 16, ],
+        108: ["Request encrypted monetary id", 2, 16, ],
+        107: ["Operate escrow", 1, 0, ],
+        106: ["Request escrow status", 0, 3, ],
+        105: ["Data stream", 255, 255, ],
+        104: ["Request service status", 1, 255, ],
+        4: ["Request comms revision", 0, 3, ],
+        3: ["Clear comms status variables", 0, 0, ],
+        2: ["Request comms status variables", 0, 3, ],
+        1: ["Reset device", 0, 0, ],
+        0: ["Unknown", 255, 255, ],
     }
 
     fault_code = {
@@ -367,6 +524,8 @@ class Hla(HighLevelAnalyzer):
 
     device_category = ChoicesSetting(label = "Slave device category", choices = (str_cv, str_payout, str_bv))
 
+    address_in_progress = 0
+
     """ An optional list of types this analyzer produces, 
     providing a way to customize the way frames are displayed in Logic 2."""
 
@@ -400,6 +559,7 @@ class Hla(HighLevelAnalyzer):
         self.len_data = 0
         self.start_time = None
         self.data = []
+        Hla.address_in_progress = 0
         return
 
     def __get_int(self, index = 4, length = 2):
@@ -418,7 +578,7 @@ class Hla(HighLevelAnalyzer):
             int_result += self.data[index + 2] * 65536
         if length == 4:
             int_result += self.data[index + 3] * 16777216
-        return int(int_result)
+        return int_result
 
     @property
     def __get_device_address(self):
@@ -429,7 +589,6 @@ class Hla(HighLevelAnalyzer):
             Adresse du périphérique
         """
         return self.device_address
-
 
     @property
     def __checksum(self):
@@ -667,7 +826,7 @@ class Hla(HighLevelAnalyzer):
             return str_result
 
         # TODO display control
-        elif self.header == 203:
+        elif self.cc_Header == 203:
             pass
 
         # Teach mode control
@@ -708,8 +867,8 @@ class Hla(HighLevelAnalyzer):
 
         # Upload window data
         elif self.cc_Header == 183:
-            str_result = f"Pos. {self.data[5]}\
-                {('Program coin', 'Modif credit code', 'Delete coin', 'Program token', 'Delete token')[self.data[4]]}"
+            str_op = ("Program coin", "Modif credit code", "Delete coin", "Program token", "Delete token")
+            str_result = f"Pos. {self.data[5]} {str_op[self.data[4]]}"
             if self.data[4] == 1:
                 str_result += f" Credit code {self.data[6]}"
             elif self.data[4] in [0, 3]:
@@ -749,10 +908,10 @@ class Hla(HighLevelAnalyzer):
 
         # Modify inhibit and override registers
         elif self.cc_Header == 162:
-            return f"Current (inh. [{bin(self.data[5])[2:].rjust(8, '0')}/{bin(self.data[4])[2:].rjust(8, '0')}] \
-                     overr. sorter [{bin(self.data[6])[2:].rjust(8, '0')}]) - \
-                     Next (inh. [{bin(self.data[8])[2:].rjust(8, '0')}/{bin(self.data[7])[2:].rjust(8, '0')}] \
-                     overr. sorter [{bin(self.data[9])[2:].rjust(8, '0')}])"
+            return f"Current (inh. [{bin(self.data[5])[2:].rjust(8, '0')}/{bin(self.data[4])[2:].rjust(8, '0')}]" \
+                   f" overr. sorter [{bin(self.data[6])[2:].rjust(8, '0')}]) - " \
+                   f"Next (inh. [{bin(self.data[8])[2:].rjust(8, '0')}/{bin(self.data[7])[2:].rjust(8, '0')}] " \
+                   f"overr. sorter [{bin(self.data[9])[2:].rjust(8, '0')}])"
 
         # Pump RNG
         elif self.cc_Header == 161:
@@ -783,8 +942,8 @@ class Hla(HighLevelAnalyzer):
         # Test lamps
         elif self.cc_Header == 151:
             if self.data[5] < 3:
-                return f"Lamp {self.data[4]} \
-                        control {('automatic mode', 'force lamp off', 'force lamp on',)[self.data[5]]}"
+                return f"Lamp {self.data[4]} " \
+                       f"control {('automatic mode', 'force lamp off', 'force lamp on',)[self.data[5]]}"
             elif self.data[5] > 9:
                 return f" Lamp {self.data[4]} flash every {self.data[5] * 20} ms"
 
@@ -1240,99 +1399,100 @@ class Hla(HighLevelAnalyzer):
             The type and data values in `frame` will depend on the input analyzer.
         """
 
-        if self.len_data == 0:
-            self.__reset_frame()
-
         try:
-            self.data += frame.data["data"]
-            self.len_data += 1
+            if (Hla.address_in_progress == 0) or (Hla.address_in_progress == self.__get_device_address):
+                if self.len_data == 0:
+                    self.__reset_frame()
 
-            if self.len_data == 1:
-                self.start_time = frame.start_time
-                # Todo MCS header
-                if self.data[0] == self.device_address:  # or (self.data[0] == self.broadcast):
-                    self.isMaster2Slave = True
-                elif self.isRequest and self.data[0] == 1:
-                    self.isMaster2Slave = False
-                else:
-                    raise
+                self.data += frame.data["data"]
+                self.len_data += 1
 
-            elif self.len_data == 2:
-                return
-
-            if self.len_data > 2:
-                if self.isMaster2Slave:
-                    if (self.len_data == 3) and (self.device_category != self.str_bv) and (self.data[2] != 1):
+                if self.len_data == 1:
+                    self.start_time = frame.start_time
+                    # Todo MCS header
+                    Hla.address_in_progress = self.__get_device_address
+                    if self.data[0] == self.__get_device_address:  # or (self.data[0] == self.broadcast):
+                        self.isMaster2Slave = True
+                    elif self.isRequest and self.data[0] == 1:
+                        self.isMaster2Slave = False
+                    else:
                         raise
 
-                    if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
-                        self.isRequest = True
-                        self.len_data = self.cc_Header = 0
-                        str_header = "unknown"
-                        if (self.data[3]) in self.header:
-                            str_header = self.header[self.data[3]]
-                            self.cc_Header = self.data[3]
-                        if self.device_category == self.str_bv:
-                            check_result = self.__crc_16
-                            check_ok = (check_result == self.data[2] + (self.data[-1] * 256))
-                            if (not check_ok) and (str_header == "unknown"):
-                                raise
+                elif self.len_data == 2:
+                    return
 
-                            return AnalyzerFrame(f"{self.device_category}({self.data[0]}) - # param.({self.data[1]}) - "
-                                                 f"LSB CRC({self.data[2]}) - {str_header}({self.data[3]}) - "
-                                                 f"param.{self.__get_param}{self.__master2slave} - "
-                                                 f"MSB CRC({self.data[-1]}) ", self.start_time, frame.end_time,
-                                                 {"Checksum ": f" {self.data[2] + (self.data[-1] * 256)} "
-                                                               f"{self.verif[check_ok]}"})
-                        else:
-                            check_result = self.__checksum
-                            check_ok = (check_result == self.data[-1])
-                            if (not check_ok) and (str_header == "unknown"):
-                                raise
-                            return AnalyzerFrame(f"{self.device_category}({self.data[0]}) - # param.({self.data[1]}) - "
-                                                 f"Master({self.data[2]}) - {str_header}({self.data[3]}) - param. "
-                                                 f"{self.__get_param}{self.__master2slave} ", self.start_time,
-                                                 frame.end_time,
-                                                 {"Checksum ": f" {self.data[-1]} {self.verif[check_ok]}"})
-                else:
-                    if (self.len_data == 3) and (self.device_category != self.str_bv) and \
-                            (self.data[2] != self.device_address):
-                        raise
+                if self.len_data > 2:
+                    if self.isMaster2Slave:
+                        if (self.len_data == 3) and (self.device_category != self.str_bv) and (self.data[2] != 1):
+                            raise
+                        if (self.len_data == 4) and ((Hla.header[self.data[3]][1] != 255) and
+                                                     (Hla.header[self.data[3]][1] != self.data[1])):
+                            raise
 
-                    if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
-                        self.len_data = 0
-                        self.isRequest = False
-                        if self.device_category == self.str_bv:
-                            check_result = self.__crc_16
-                            check_ok = (check_result == self.data[2] + (self.data[-1] * 256))
+                        if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
+                            self.isRequest = True
+                            self.len_data = self.cc_Header = 0
+                            str_header = "unknown"
+                            if (self.data[3]) in Hla.header:
+                                str_header = Hla.header[self.data[3]][0]
+                                self.cc_Header = self.data[3]
 
-                            return AnalyzerFrame(f"Master({self.data[0]}) - # param.({self.data[1]}) - "
-                                                 f"LSB CRC({self.data[2]}) - {self.acknowledge[self.data[3]]}"
-                                                 f"({self.data[3]}) - param. {self.__get_param}{self.__slave2master} - "
-                                                 f"MSB CRC({self.data[-1]}) ",
-                                                 self.start_time, frame.end_time,
-                                                 {"Checksum ": f" {self.data[2] + self.data[-1] * 256} "
-                                                               f"{self.verif[check_ok]}"})
-                        else:
-                            check_result = self.__checksum
-                            check_ok = (check_result == self.data[- 1])
-                            return AnalyzerFrame(f"Master({self.data[0]}) - # param.({self.data[1]}) - "
-                                                 f"{self.device_category}({self.data[2]}) - "
-                                                 f"{self.acknowledge[self.data[3]]}({self.data[3]}) - param. "
-                                                 f"{self.__get_param}{self.__slave2master} ",
-                                                 self.start_time, frame.end_time,
-                                                 {"Checksum ": f" {self.data[-1]} {self.verif[check_ok]}"})
-                            #
-                            #
-                            # str_frame = ("Master({}) - # param.({}) - {}({}) - {}({}) - param." +
-                            #              self._get_param + self._slave2master + " ")
-                            # return AnalyzerFrame(str_frame.format(self.data[0], self.data[1], self.device_category,
-                            #                                       self.data[2],
-                            #                                       self.acknowledge[self.data[3]],
-                            #                                       self.data[3]),
-                            #                      self.start_time, frame.end_time,
-                            #                      {"Checksum ": " {} ".format(self.data[self.len_data - 1]) +
-                            #                                    self.verif[check_ok]}, )
-        except (KeyError, RuntimeError, IndexError):
+                            if self.device_category == self.str_bv:
+                                check_result = self.__crc_16
+                                check_ok = (check_result == self.data[2] + (self.data[-1] * 256))
+                                if (not check_ok) and (str_header == "unknown"):
+                                    raise
+
+                                return AnalyzerFrame(f"{self.device_category}({self.data[0]}) -"
+                                                     f" # param.({self.data[1]}) - "
+                                                     f"LSB CRC({self.data[2]}) - {str_header}({self.data[3]}) - "
+                                                     f"param.{self.__get_param}{self.__master2slave} - "
+                                                     f"MSB CRC({self.data[-1]}) ", self.start_time, frame.end_time,
+                                                     {"Checksum ": f" {self.data[2] + (self.data[-1] * 256)} "
+                                                                   f"{self.verif[check_ok]}"})
+                            else:
+                                check_result = self.__checksum
+                                check_ok = (check_result == self.data[-1])
+                                if (not check_ok) and (str_header == "unknown"):
+                                    raise
+                                return AnalyzerFrame(f"{self.device_category}({self.data[0]}) - "
+                                                     f"# param.({self.data[1]}) - "
+                                                     f"Master({self.data[2]}) - {str_header}({self.data[3]}) - param. "
+                                                     f"{self.__get_param}{self.__master2slave} ", self.start_time,
+                                                     frame.end_time,
+                                                     {"Checksum ": f" {self.data[-1]} {self.verif[check_ok]}"})
+                    else:
+                        if (self.len_data == 3) and (self.device_category != self.str_bv) and \
+                                (self.data[2] != self.__get_device_address):
+                            raise
+
+                        if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
+                            self.len_data = 0
+                            self.isRequest = False
+                            if self.device_category == self.str_bv:
+                                check_result = self.__crc_16
+                                check_ok = (check_result == self.data[2] + (self.data[-1] * 256))
+
+                                return AnalyzerFrame(f"Master({self.data[0]}) - # param.({self.data[1]}) - "
+                                                     f"LSB CRC({self.data[2]}) - {self.acknowledge[self.data[3]]}"
+                                                     f"({self.data[3]}) - "
+                                                     f"param. {self.__get_param}{self.__slave2master} - "
+                                                     f"MSB CRC({self.data[-1]}) ",
+                                                     self.start_time, frame.end_time,
+                                                     {"Checksum ": f" {self.data[2] + self.data[-1] * 256} "
+                                                                   f"{self.verif[check_ok]}"})
+                            else:
+                                check_result = self.__checksum
+                                check_ok = (check_result == self.data[- 1])
+                                return AnalyzerFrame(f"Master({self.data[0]}) - # param.({self.data[1]}) - "
+                                                     f"{self.device_category}({self.data[2]}) - "
+                                                     f"{self.acknowledge[self.data[3]]}({self.data[3]}) - param. "
+                                                     f"{self.__get_param}{self.__slave2master} ",
+                                                     self.start_time, frame.end_time,
+                                                     {"Checksum ": f" {self.data[-1]} {self.verif[check_ok]}"})
+            else:
+                raise
+        except:
+            print()
             self.__reset_frame()
         return

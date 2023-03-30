@@ -1427,6 +1427,7 @@ class Hla(HighLevelAnalyzer):
                             raise
                         if (self.len_data == 4) and ((Hla.header[self.data[3]][1] != 255) and
                                                      (Hla.header[self.data[3]][1] != self.data[1])):
+                            print("Erreur nombre de paramètres.")
                             raise
 
                         if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):
@@ -1493,6 +1494,5 @@ class Hla(HighLevelAnalyzer):
             else:
                 raise
         except:
-            print()
             self.__reset_frame()
         return

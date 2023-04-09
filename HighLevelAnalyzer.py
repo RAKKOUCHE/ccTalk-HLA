@@ -581,6 +581,18 @@ class Hla(HighLevelAnalyzer):
         return int_result
 
     @property
+    def __is_a_header(self):
+        """
+            Vérifie si la commande se trouve dans la liste des headers
+
+            Returns :
+                True si la commande est dans la liste
+                False si la commande n'est pas dans la liste
+
+        """
+        return (self.data[3]) in Hla.header
+
+    @property
     def __get_device_address(self):
         """
             Getter de l'adresse du périphérique
@@ -1434,16 +1446,16 @@ class Hla(HighLevelAnalyzer):
                             self.isRequest = True
                             self.len_data = self.cc_Header = 0
                             str_header = "unknown"
-                            if (self.data[3]) in Hla.header:
+                            # if (self.data[3]) in Hla.header:
+                            if self.__is_a_header:
                                 str_header = Hla.header[self.data[3]][0]
                                 self.cc_Header = self.data[3]
 
                             if self.device_category == self.str_bv:
                                 check_result = self.__crc_16
                                 check_ok = (check_result == self.data[2] + (self.data[-1] * 256))
-                                if (not check_ok) and (str_header == "unknown"):
+                                if (not check_ok) and (not self.__is_a_header):
                                     raise
-
                                 return AnalyzerFrame(f"{self.device_category}({self.data[0]}) -"
                                                      f" # param.({self.data[1]}) - "
                                                      f"LSB CRC({self.data[2]}) - {str_header}({self.data[3]}) - "
@@ -1454,7 +1466,7 @@ class Hla(HighLevelAnalyzer):
                             else:
                                 check_result = self.__checksum
                                 check_ok = (check_result == self.data[-1])
-                                if (not check_ok) and (str_header == "unknown"):
+                                if (not check_ok) and (not self.__is_a_header):
                                     raise
                                 return AnalyzerFrame(f"{self.device_category}({self.data[0]}) - "
                                                      f"# param.({self.data[1]}) - "

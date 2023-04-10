@@ -564,7 +564,11 @@ class Hla(HighLevelAnalyzer):
            Arguments:
            - Aucun
 
+<<<<<<< HEAD
            Returns
+=======
+           Return :
+>>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
            - Aucun
         """
         self.len_data = 0
@@ -577,45 +581,75 @@ class Hla(HighLevelAnalyzer):
             Extrait un entier à partir des données de la trame.
 
             Cette méthode extrait un entier à partir des données de la trame à l'indice spécifié par `index` et d'une
+<<<<<<< HEAD
             longueur spécifiée par `length`. Les données de la trame sont stockées dans la liste `self.data`. Les
             entiers dans les trames sont codés sur deux ou quatre octets en fonction de la longueur.
+=======
+            longueur spécifiée par `length`. Les données de la trame sont stockées dans la liste `self.data`. Les entiers
+            dans les trames sont codés sur deux ou quatre octets en fonction de la longueur.
+>>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
 
             :param self: Une instance de la classe.
             :param index: L'indice de départ des octets à extraire dans la liste `self.data`. Par défaut,
                             l'indice est 4 pour ignorer les octets d'en-tête.
             :param length: La longueur en octets de l'entier à extraire. Par défaut, la longueur est 2 pour les entiers
                             codés sur deux octets.
+<<<<<<< HEAD
             :returns: L'entier extrait à partir des données de la trame.
+=======
+            :return: L'entier extrait à partir des données de la trame.
+>>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
         """
         return sum([self.data[index + i] * (256 ** i) for i in range(length)])
 
     @property
     def __is_a_header(self):
         """
+<<<<<<< HEAD
             Vérifie si le header du message est un header contenu dans le dictionnaire header
 
             Returns:
                 bool : True si le type de message correspond à un header  contenu dans le dictionnaire header, False
                         sinon.
+=======
+        Vérifie si le header du message est un header contenu dans le dictionnaire header
+
+        Return :
+            bool : True si le type de message correspond à un header  contenu dans le dictionnaire header, False sinon.
+>>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
         """
         return self.data[3] in Hla.header
 
     @property
     def __checksum(self):
         """
+<<<<<<< HEAD
             Calculates the checksum of the message.
 
             Returns:
                 int: The checksum value, which is a number between 0 and 255.
+=======
+        Calculates the checksum of the message.
+
+        Returns:
+            int: The checksum value, which is a number between 0 and 255.
+>>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
         """
         return (256 - (sum(self.data[0:-1]) % 256)) % 256
 
     def __crc_16(self):
         """
+<<<<<<< HEAD
             Calculates the CRC-16 of the message.
 
             Returns:
                 int: The CRC-16 value, which is a number between 0 and 65535.
+=======
+        Calculates the CRC-16 of the message.
+
+        Returns:
+            int: The CRC-16 value, which is a number between 0 and 65535.
+>>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
         """
         data_slice = self.data[0:2] + self.data[3:-1]
         crc = 0
@@ -632,10 +666,17 @@ class Hla(HighLevelAnalyzer):
     @property
     def __get_param(self):
         """
+<<<<<<< HEAD
             Get parameters and return them between brackets
 
             Return :
             str: A string containing the parameters between brackets and an arrow "->" at the end if an interpretation will be displayed
+=======
+        Get parameters and return them between brackets
+
+        Returns:
+        str: A string containing the parameters between brackets and an arrow "->" at the end if an interpretation will be displayed
+>>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
         """
         str_result = str(self.data[4:-1])
         if self.data[1] > 0:
@@ -645,16 +686,22 @@ class Hla(HighLevelAnalyzer):
     @property
     def __get_ascii(self):
         """
+<<<<<<< HEAD
             Convert the bytes in the message to a string of ASCII characters
             Returns:
                 A string of ASCII characters
+=======
+        Convert the bytes in the message to a string of ASCII characters
+        Returns:
+            A string of ASCII characters
+>>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
         """
         return ''.join(chr(c) for c in self.data[4:-1])
 
     @property
     def __decode_date(self):
         """
-            Decode the cctalk  date parameter and return as a formatted string.
+            Decode the cctalk date parameter and return as a formatted string.
 
             Returns:
                 str: A string representing the decoded date in the format of "DD/MM/YYYY" if the base year is greater
@@ -756,6 +803,7 @@ class Hla(HighLevelAnalyzer):
             Returns:
                 str: A string that says "Master inh. activated" if the master inhibit feature is activated,
                      and "Master inh. norm. op." if it is not.
+
         """
         return f"Master inh. {'activated' if self.data[4] & 1 else 'norm. op.'}"
 
@@ -805,8 +853,8 @@ class Hla(HighLevelAnalyzer):
         """
             Effectue l'interprétation des paramètres contenus dans le message du master
 
-        Return :
-            Une chaine de caractères contenant l'interprétation du message du master
+            ReturnS :
+                Une chaine de caractères contenant l'interprétation du message du master
         """
         # 240 Test solenoid, 239 Operate motors, 238 Test output lines, 233 Latch out lines, 222 Modify sorter
         # override status

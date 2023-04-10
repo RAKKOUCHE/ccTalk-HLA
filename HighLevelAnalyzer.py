@@ -564,7 +564,7 @@ class Hla(HighLevelAnalyzer):
            Arguments:
            - Aucun
 
-           Return :
+           Returns
            - Aucun
         """
         self.len_data = 0
@@ -577,44 +577,45 @@ class Hla(HighLevelAnalyzer):
             Extrait un entier à partir des données de la trame.
 
             Cette méthode extrait un entier à partir des données de la trame à l'indice spécifié par `index` et d'une
-            longueur spécifiée par `length`. Les données de la trame sont stockées dans la liste `self.data`. Les entiers
-            dans les trames sont codés sur deux ou quatre octets en fonction de la longueur.
+            longueur spécifiée par `length`. Les données de la trame sont stockées dans la liste `self.data`. Les
+            entiers dans les trames sont codés sur deux ou quatre octets en fonction de la longueur.
 
             :param self: Une instance de la classe.
             :param index: L'indice de départ des octets à extraire dans la liste `self.data`. Par défaut,
                             l'indice est 4 pour ignorer les octets d'en-tête.
             :param length: La longueur en octets de l'entier à extraire. Par défaut, la longueur est 2 pour les entiers
                             codés sur deux octets.
-            :return: L'entier extrait à partir des données de la trame.
+            :returns: L'entier extrait à partir des données de la trame.
         """
         return sum([self.data[index + i] * (256 ** i) for i in range(length)])
 
     @property
     def __is_a_header(self):
         """
-        Vérifie si le header du message est un header contenu dans le dictionnaire header
+            Vérifie si le header du message est un header contenu dans le dictionnaire header
 
-        Return :
-            bool : True si le type de message correspond à un header  contenu dans le dictionnaire header, False sinon.
+            Returns:
+                bool : True si le type de message correspond à un header  contenu dans le dictionnaire header, False
+                        sinon.
         """
         return self.data[3] in Hla.header
 
     @property
     def __checksum(self):
         """
-        Calculates the checksum of the message.
+            Calculates the checksum of the message.
 
-        Returns:
-            int: The checksum value, which is a number between 0 and 255.
+            Returns:
+                int: The checksum value, which is a number between 0 and 255.
         """
         return (256 - (sum(self.data[0:-1]) % 256)) % 256
 
     def __crc_16(self):
         """
-        Calculates the CRC-16 of the message.
+            Calculates the CRC-16 of the message.
 
-        Returns:
-            int: The CRC-16 value, which is a number between 0 and 65535.
+            Returns:
+                int: The CRC-16 value, which is a number between 0 and 65535.
         """
         data_slice = self.data[0:2] + self.data[3:-1]
         crc = 0
@@ -631,10 +632,10 @@ class Hla(HighLevelAnalyzer):
     @property
     def __get_param(self):
         """
-        Get parameters and return them between brackets
+            Get parameters and return them between brackets
 
-        Returns:
-        str: A string containing the parameters between brackets and an arrow "->" at the end if an interpretation will be displayed
+            Return :
+            str: A string containing the parameters between brackets and an arrow "->" at the end if an interpretation will be displayed
         """
         str_result = str(self.data[4:-1])
         if self.data[1] > 0:
@@ -644,21 +645,21 @@ class Hla(HighLevelAnalyzer):
     @property
     def __get_ascii(self):
         """
-        Convert the bytes in the message to a string of ASCII characters
-        Returns:
-            A string of ASCII characters
+            Convert the bytes in the message to a string of ASCII characters
+            Returns:
+                A string of ASCII characters
         """
         return ''.join(chr(c) for c in self.data[4:-1])
 
     @property
     def __decode_date(self):
         """
-        Decode the cctalk  date parameter and return as a formatted string.
+            Decode the cctalk  date parameter and return as a formatted string.
 
-        Returns:
-            str: A string representing the decoded date in the format of "DD/MM/YYYY" if the base year is greater than 0
-                or in the format of "DD/MM/+YY" if the base year is less than or equal to 0.
-        """
+            Returns:
+                str: A string representing the decoded date in the format of "DD/MM/YYYY" if the base year is greater
+                    than 0 or in the format of "DD/MM/+YY" if the base year is less than or equal to 0.
+            """
         result = self.__get_int()
         day = result & 31
         month = (result >> 5) & 15
@@ -672,11 +673,11 @@ class Hla(HighLevelAnalyzer):
     @property
     def __decode_buffer_cv(self):
         """
-        Get a string that contains information about the events and results of a data buffer.
+            Get a string that contains information about the events and results of a data buffer.
 
-        Returns:
-            str: A string that includes the number of events and the details of each event, including the
-                 result number, coin sort (if accepted), and error code (if rejected).
+            Returns:
+                str: A string that includes the number of events and the details of each event, including the
+                     result number, coin sort (if accepted), and error code (if rejected).
         """
         num_events = self.data[4]
         str_events = f"# Events {num_events} "
@@ -713,11 +714,11 @@ class Hla(HighLevelAnalyzer):
     @property
     def __decode_buffer_bill(self):
         """
-        Get a string that contains information about the events and results of a data buffer.
+            Get a string that contains information about the events and results of a data buffer.
 
-        Returns:
-            str: A string that includes the number of events and the details of each event, including the
-                 result number, bill value (if accepted), and error code (if rejected).
+            Returns:
+                str: A string that includes the number of events and the details of each event, including the
+                     result number, bill value (if accepted), and error code (if rejected).
         """
         num_events = self.data[4]
         str_events = f"# Events {num_events} "
@@ -750,25 +751,25 @@ class Hla(HighLevelAnalyzer):
     @property
     def __master_inhibit(self):
         """
-        Get a string that indicates whether the master inhibit feature is activated or not.
+            Get a string that indicates whether the master inhibit feature is activated or not.
 
-        Returns:
-            str: A string that says "Master inh. activated" if the master inhibit feature is activated,
-                 and "Master inh. norm. op." if it is not.
+            Returns:
+                str: A string that says "Master inh. activated" if the master inhibit feature is activated,
+                     and "Master inh. norm. op." if it is not.
         """
         return f"Master inh. {'activated' if self.data[4] & 1 else 'norm. op.'}"
 
     @property
     def __stacker_escrow(self):
         """
-        Get a string that indicates whether the stacker and escrow are being used or not.
+            Get a string that indicates whether the stacker and escrow are being used or not.
 
-        Return :
-            str: A string that says "Stacker non used Escrow non used" if both the stacker and escrow are not being
-                    used,
-                 "Stacker used Escrow non used" if only the stacker is being used,
-                 "Stacker non used Escrow used" if only the escrow is being used, or
-                 "Stacker used Escrow used" if both the stacker and escrow are being used.
+            Return :
+                str: A string that says "Stacker non used Escrow non used" if both the stacker and escrow are not being
+                        used,
+                     "Stacker used Escrow non used" if only the stacker is being used,
+                     "Stacker non used Escrow used" if only the escrow is being used, or
+                     "Stacker used Escrow used" if both the stacker and escrow are being used.
         """
         use = ('non used', 'used')
         return f"Stacker {use[self.data[4] & 1]} Escrow {use[self.data[4] & 2]}"
@@ -776,18 +777,28 @@ class Hla(HighLevelAnalyzer):
     @property
     def __get_country(self):
         """
-        Get the two-letter ISO country code of the bill.
+            Get the two-letter ISO country code of the bill.
 
-        Returns:
-            str: The two-letter ISO country code of the bill.
+            Returns:
+                str: The two-letter ISO country code of the bill.
         """
         return f"{chr(self.data[4])}{chr(self.data[5])}"
 
     def __get_mask(self, index = 4, length = 1):
+        """
+            Returns the mask for the data starting from the given index.
+
+            Args:
+                index (int): The index from where to start the mask. Default is 4.
+                length (int): The length of the mask. Default is 1.
+
+            Returns:
+                str: A string representation of the mask.
+
+        """
         if length == 1:
             return f"Mask [{bin(self.data[index])[2:].rjust(8, '0')}]"
-        else:
-            return f"Mask [{bin(self.data[index + 1])[2:].rjust(8, '0')} / {bin(self.data[index])[2:].rjust(8, '0')}]"
+        return f"Mask [{bin(self.data[index + 1])[2:].rjust(8, '0')} / {bin(self.data[index])[2:].rjust(8, '0')}]"
 
     @property
     def __master2slave(self):

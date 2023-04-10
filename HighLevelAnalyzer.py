@@ -534,6 +534,19 @@ class Hla(HighLevelAnalyzer):
     # }
 
     def __init__(self):
+        """
+            This is an implementation of the constructor method of the class HLA.
+            It initializes several instance variables with default values:
+
+            self.data: an empty list.
+            self.len_data: an integer initialized to 0.
+            self.cc_Header: an integer initialized to 0.
+            self.broadcast: an integer initialized to 0.
+            self.start_time: a reference to None.
+            self.isMaster2Slave: a Boolean initialized to True.
+            self.isRequest: a Boolean initialized to False.
+            self.base_year: an integer initialized to 0.
+        """
         self.data = []
         self.len_data = self.cc_Header = self.broadcast = 0
         self.start_time = None
@@ -541,111 +554,87 @@ class Hla(HighLevelAnalyzer):
         self.isRequest = False
         self.base_year = 0
 
-        """       
-        Initialize HLA.
-
-        Settings can be accessed using the same name used above.
-        """
-        # print(
-        #     "\nSetting : \n - Adresse périphérique : {} \n - Catégorie : {}".format(
-        #         self.device_address, self.device_category
-        #     )
-        # )
-
     def __reset_frame(self):
         """
-            Remise à zéro des informations de documentations de la trame
+           Réinitialise les variables de l'instance pour une nouvelle trame.
+
+           Cette méthode réinitialise les variables de l'instance qui sont utilisées pour stocker les données d'une trame.
+           Elle est appelée chaque fois qu'une nouvelle trame doit être construite.
+
+           Arguments:
+           - Aucun
+
+           Return :
+           - Aucun
         """
         self.len_data = 0
         self.start_time = None
-        self.data = []
+        self.data.clear()
         Hla.address_in_progress = 0
-        return
 
     def __get_int(self, index = 4, length = 2):
         """
-            Calcule un nombre entier à partir des données contenues dans data
-        Args :
-            index : Position du MSB
-            length : Nombre d'octets à considérer
+            Extrait un entier à partir des données de la trame.
 
-        Returns :
-            Un nombre entier
+            Cette méthode extrait un entier à partir des données de la trame à l'indice spécifié par `index` et d'une
+            longueur spécifiée par `length`. Les données de la trame sont stockées dans la liste `self.data`. Les entiers
+            dans les trames sont codés sur deux ou quatre octets en fonction de la longueur.
+
+            :param self: Une instance de la classe.
+            :param index: L'indice de départ des octets à extraire dans la liste `self.data`. Par défaut,
+                            l'indice est 4 pour ignorer les octets d'en-tête.
+            :param length: La longueur en octets de l'entier à extraire. Par défaut, la longueur est 2 pour les entiers
+                            codés sur deux octets.
+            :return: L'entier extrait à partir des données de la trame.
         """
-
-        int_result = self.data[index] + (self.data[index + 1] * 256)
-        if length > 2:
-            int_result += self.data[index + 2] * 65536
-        if length == 4:
-            int_result += self.data[index + 3] * 16777216
-        return int_result
+        return sum([self.data[index + i] * (256 ** i) for i in range(length)])
 
     @property
     def __is_a_header(self):
         """
-            Vérifie si la commande se trouve dans la liste des headers
+        Vérifie si le header du message est un header contenu dans le dictionnaire header
 
-            Returns :
-                True si la commande est dans la liste
-                False si la commande n'est pas dans la liste
-
+        Return :
+            bool : True si le type de message correspond à un header  contenu dans le dictionnaire header, False sinon.
         """
-        return (self.data[3]) in Hla.header
-
-    @property
-    def __get_device_address(self):
-        """
-            Getter de l'adresse du périphérique
-
-        Returns :
-            Adresse du périphérique
-        """
-        return self.device_address
+        return self.data[3] in Hla.header
 
     @property
     def __checksum(self):
         """
-            Retourne le checksum 8 bits de la trame
+        Calculates the checksum of the message.
 
-        Returns :
-            le checksum sur 1 octet de la trame - le dernier octet
+        Returns:
+            int: The checksum value, which is a number between 0 and 255.
         """
-        result = 0
-        for value in self.data[0:-1]:
-            result += value
-        return 256 - (result % 256)
+        return (256 - (sum(self.data[0:-1]) % 256)) % 256
 
-    @property
     def __crc_16(self):
         """
-            Retourne le CRC-16 de la trame
-        Returns :
-            CRC sur 2 octets
-        """
+        Calculates the CRC-16 of the message.
 
-        list_locale = self.data[0:2] + self.data[3:-1]
-        word_crc = i = 0
-        while i < len(list_locale):
-            word_crc ^= (list_locale[i] << 8)
-            j = 0
-            while j < 8:
-                if word_crc & 0x8000:
-                    word_crc = (word_crc << 1) ^ 0x1021
+        Returns:
+            int: The CRC-16 value, which is a number between 0 and 65535.
+        """
+        data_slice = self.data[0:2] + self.data[3:-1]
+        crc = 0
+        for byte in data_slice:
+            crc ^= (byte << 8)
+            for _ in range(8):
+                if crc & 0x8000:
+                    crc = (crc << 1) ^ 0x1021
                 else:
-                    word_crc <<= 1
-                j += 1
-            i += 1
-        word_crc &= 0xFFFF
-        return word_crc
+                    crc <<= 1
+            crc &= 0xFFFF
+        return crc
 
     @property
     def __get_param(self):
         """
-        Isole les paramètres et les retourne entre crochets
-        Returns :
-            Une chaine de caractères contenant les paramètres et se finissant par une flèche si une interpretation sera
-            affichée
+        Get parameters and return them between brackets
 
+        Returns:
+        str: A string containing the parameters between brackets and an arrow "->" at the end if an interpretation will be displayed
         """
         str_result = str(self.data[4:-1])
         if self.data[1] > 0:
@@ -655,102 +644,143 @@ class Hla(HighLevelAnalyzer):
     @property
     def __get_ascii(self):
         """
-            Convertit les paramètres en chaines de caractères
-        Returns :
-            Une chaine de caractères contenant les caractères ascii des paramètres
-
+        Convert the bytes in the message to a string of ASCII characters
+        Returns:
+            A string of ASCII characters
         """
-
-        str_ascii = ""
-        for c in self.data[4:-1]:
-            str_ascii += chr(c)
-        return str_ascii
+        return ''.join(chr(c) for c in self.data[4:-1])
 
     @property
     def __decode_date(self):
         """
-            Calcule et interprète une date ccTalk
-        Returns :
-            Une chaine de caractères contenant la date
+        Decode the cctalk  date parameter and return as a formatted string.
 
+        Returns:
+            str: A string representing the decoded date in the format of "DD/MM/YYYY" if the base year is greater than 0
+                or in the format of "DD/MM/+YY" if the base year is less than or equal to 0.
         """
         result = self.__get_int()
+        day = result & 31
+        month = (result >> 5) & 15
+        year = (result >> 9) & 31
         if self.base_year > 0:
-            return "{:02d}/{:02d}/{:04d}".format(result & 31, (result >> 5) & 15, 2000 + ((result >> 9) & 31))
+            year += 2000
         else:
-            return "{:02d}/{:02d}/+{:02d}".format(result & 31, (result >> 5) & 15, (result >> 9) & 31)
+            year = f"+{year:02d}"
+        return f"{day:02d}/{month:02d}/{year}"
 
     @property
     def __decode_buffer_cv(self):
         """
-            Analyse le buffer des événements et des errors du monnayeur
-        Returns :
-            Une chaine de caractères contenant l'interprétation du buffer
-        """
+        Get a string that contains information about the events and results of a data buffer.
 
-        str_events = f"# Events {self.data[4]} "
-        i = 0
-        str_result = ""
-        while i < 5:
-            str_result += f" - Result {i + 1} : "
-            if self.data[5 + (i * 2)] > 0:
+        Returns:
+            str: A string that includes the number of events and the details of each event, including the
+                 result number, coin sort (if accepted), and error code (if rejected).
+        """
+        num_events = self.data[4]
+        str_events = f"# Events {num_events} "
+
+        results = []
+        for i in range(5):
+            idx = 5 + (i * 2)
+            if self.data[idx] > 0:
                 # Coin accepted
-                str_result += f"Coin {self.data[5 + (i * 2)]} Sort. {self.data[6 + (i * 2)]}"
+                coin_sort = self.data[idx]
+                channel = self.data[idx + 1]
+                result_str = f"- Result {i + 1}: Coin {coin_sort} Sort. {channel}"
             else:
-                # Erreur
-                str_result += f"Err. #{self.data[6 + (i * 2)]} "
-                # Erreur inhibited
-                if (self.data[6 + (i * 2)] > 127) and (self.data[6 + (i * 2)] < 160):
-                    str_result += f"Inhibited ch. {self.data[6 + (i * 2)] - 127}"
-                    # Erreur reserved
-                elif (self.data[6 + (i * 2)] > 159) and (self.data[6 + (i * 2)] < 191):
-                    str_result += f" Err. #{self.data[6 + (i * 2)]} Reserved"
-                    # Erreur
-                elif self.data[6 + (i * 2)] < 41:
-                    str_result += f"{self.CV_Error_Code[self.data[6 + (i * 2)]]} "
+                # Error
+                error_code = self.data[idx + 1]
+                if 127 < error_code < 160:
+                    # Error inhibited
+                    channel_num = error_code - 127
+                    result_str = f"- Result {i + 1}: Err. #{error_code} Inhibited ch. {channel_num}"
+                elif 159 < error_code < 191:
+                    # Error reserved
+                    result_str = f"- Result {i + 1}: Err. #{error_code} Reserved"
+                elif error_code < 41:
+                    # Other errors
+                    error_desc = self.CV_Error_Code[error_code]
+                    result_str = f"- Result {i + 1}: {error_desc}"
                 else:
-                    str_result += "unidentified"
-            i += 1
-        return str_events + str_result
+                    result_str = f"- Result {i + 1}: unidentified"
+
+            results.append(result_str)
+
+        return str_events + ' '.join(results)
 
     @property
     def __decode_buffer_bill(self):
         """
-            Analyse le buffer des événements et des errors du monnayeur
+        Get a string that contains information about the events and results of a data buffer.
 
-        Returns :
-            Une chaine de caractères contenant l'interprétation du buffer
+        Returns:
+            str: A string that includes the number of events and the details of each event, including the
+                 result number, bill value (if accepted), and error code (if rejected).
         """
-        str_events = f"# Events {self.data[4]} "
-        i = 0
-        str_result = ""
-        while i < 5:
-            str_result += f" - Result {i + 1} : "
-            if self.data[5 + (i * 2)] > 0:
-                # bill accepted
-                if self.data[6 + (i * 2)] == 1:
-                    str_result += f"Bill {self.data[5 + (i * 2)]} in escrow"
+        num_events = self.data[4]
+        str_events = f"# Events {num_events} "
+
+        results = []
+        for i in range(5):
+            idx = 5 + (i * 2)
+            if self.data[idx] > 0:
+                # Bill accepted
+                bill_value = self.data[idx]
+                bill_status = self.data[idx + 1]
+                if bill_status == 1:
+                    result_str = f"- Result {i + 1}: Bill {bill_value} in escrow"
                 else:
-                    str_result += f"Bill {self.data[5 + (i * 2)]} in cash box"
+                    result_str = f"- Result {i + 1}: Bill {bill_value} in cash box"
             else:
-                if self.data[6 + (i * 2)] < 22:
-                    str_result += f"Code {self.data[6 + (i * 2)]} : {self.BILL_Error_Code[self.data[6 + (i * 2)]]}"
+                # Bill rejected
+                error_code = self.data[idx + 1]
+                if error_code < 22:
+                    # Other errors
+                    error_desc = self.BILL_Error_Code[error_code]
+                    result_str = f"- Result {i + 1}: Code {error_code}: {error_desc}"
                 else:
-                    str_result += f"Code {self.data[6 + (i * 2)]} : inconnu"
-            i += 1
-        return str_events + str_result
+                    result_str = f"- Result {i + 1}: Code {error_code}: inconnu"
+
+            results.append(result_str)
+
+        return str_events + ' '.join(results)
 
     @property
     def __master_inhibit(self):
-        return f"Master inh. {('activated', 'norm. op.')[self.data[4] & 1]}"
+        """
+        Get a string that indicates whether the master inhibit feature is activated or not.
+
+        Returns:
+            str: A string that says "Master inh. activated" if the master inhibit feature is activated,
+                 and "Master inh. norm. op." if it is not.
+        """
+        return f"Master inh. {'activated' if self.data[4] & 1 else 'norm. op.'}"
 
     @property
     def __stacker_escrow(self):
+        """
+        Get a string that indicates whether the stacker and escrow are being used or not.
+
+        Return :
+            str: A string that says "Stacker non used Escrow non used" if both the stacker and escrow are not being
+                    used,
+                 "Stacker used Escrow non used" if only the stacker is being used,
+                 "Stacker non used Escrow used" if only the escrow is being used, or
+                 "Stacker used Escrow used" if both the stacker and escrow are being used.
+        """
         use = ('non used', 'used')
         return f"Stacker {use[self.data[4] & 1]} Escrow {use[self.data[4] & 2]}"
 
     @property
     def __get_country(self):
+        """
+        Get the two-letter ISO country code of the bill.
+
+        Returns:
+            str: The two-letter ISO country code of the bill.
+        """
         return f"{chr(self.data[4])}{chr(self.data[5])}"
 
     def __get_mask(self, index = 4, length = 1):
@@ -764,7 +794,7 @@ class Hla(HighLevelAnalyzer):
         """
             Effectue l'interprétation des paramètres contenus dans le message du master
 
-        Returns :
+        Return :
             Une chaine de caractères contenant l'interprétation du message du master
         """
         # 240 Test solenoid, 239 Operate motors, 238 Test output lines, 233 Latch out lines, 222 Modify sorter
@@ -995,7 +1025,7 @@ class Hla(HighLevelAnalyzer):
         # Dispense hopper value
         elif self.cc_Header == 134:
             return f"Code [0X{self.data[4]}{self.data[5]}] [0X{self.data[6]}{self.data[7]}] [0X{self.data[8]}\
-                    {self.data[9]}] no. of coins {self.__get_int(10)}"
+                    {self.data[9]}] [0X{self.data[10]}{self.data[11]}] no. of coins {self.__get_int(12)}"
 
         # 131 Request hopper coin value, 130 Request indexed hopper dispense count
         elif self.cc_Header in (131, 130):
@@ -1003,7 +1033,7 @@ class Hla(HighLevelAnalyzer):
 
         # Pay money out
         elif self.cc_Header == - 125:
-            return f"To pay {self.__get_int()}"
+            return f"To pay {self.__get_int(length =self.data[1])}"
 
         # Purge hopper
         elif self.cc_Header == 121:
@@ -1019,11 +1049,11 @@ class Hla(HighLevelAnalyzer):
 
         # Modify cash box value
         elif self.cc_Header == 118:
-            return f"Cash box value {self.__get_int()}"
+            return f"Cash box value {self.__get_int(length = self.data[1])}"
 
-        # Request cash box value
+        # Modify real time clock
         elif self.cc_Header == 116:
-            return str(datetime.datetime.fromtimestamp(self.__get_int()()))
+            return str(datetime.datetime.fromtimestamp(self.__get_int(length = self.data[1])))
 
         # Switch baud rate
         elif self.cc_Header == 113:
@@ -1082,7 +1112,7 @@ class Hla(HighLevelAnalyzer):
 
         # Request serial number
         elif self.cc_Header == 242:
-            return f"S.N. {self.__get_int()} "
+            return f"S.N. {self.__get_int(length = self.data[1])} "
 
         # 237 Read input lines, 236 Read opto states, 221 Request sorter override status,
         # 217 Request payout high / low status, 169 Request address mode
@@ -1111,11 +1141,11 @@ class Hla(HighLevelAnalyzer):
 
         # Request insertion counter
         elif self.cc_Header == 226:
-            return f"Insert counter {self.__get_int()}"
+            return f"Insert counter {self.__get_int(length = self.data[1])}"
 
         # 225 Request accept counter, 150 Request individual accept counter
         elif self.cc_Header in (225, 150):
-            return f"Accept counter {self.__get_int()}"
+            return f"Accept counter {self.__get_int(length = self.data[1])}"
 
         # Request data storage availability
         elif self.cc_Header == 216:
@@ -1147,7 +1177,7 @@ class Hla(HighLevelAnalyzer):
 
         # Meter control
         elif (self.cc_Header == 204) and (self.data[1] > 0):
-            return f"Meter {self.__get_int()}"
+            return f"Meter {self.__get_int(length = self.data[1])}"
 
         # Request payout absolute count
         elif self.cc_Header == 201:
@@ -1169,11 +1199,11 @@ class Hla(HighLevelAnalyzer):
 
         # Request reject counter
         elif self.cc_Header == 194:
-            return f"Rej. counter {self.__get_int()}"
+            return f"Rej. counter {self.__get_int(length = 3)}"
 
         # Request fraud counter
         elif self.cc_Header == 193:
-            return f"Fraud. counter {self.__get_int()}"
+            return f"Fraud. counter {self.__get_int(length = 3)}"
 
         # Request build code
         elif self.cc_Header == 192:
@@ -1235,7 +1265,7 @@ class Hla(HighLevelAnalyzer):
 
         # Request hopper dispense count
         elif self.cc_Header == 168:
-            return f"Dispensed {self.__get_int()}"
+            return f"Dispensed {self.__get_int(length = self.data[1])}"
 
         # Dispense hopper coins
         elif (self.cc_Header == 167) and (self.data[1] > 0):
@@ -1282,7 +1312,7 @@ class Hla(HighLevelAnalyzer):
 
         # Request individual error counter
         elif self.cc_Header == 149:
-            return " Error counter : {} ".format(self.__get_int())
+            return " Error counter : {} ".format(self.__get_int(length = self.data[1]))
 
         # Read opto voltages
         elif self.cc_Header == 148:
@@ -1320,11 +1350,11 @@ class Hla(HighLevelAnalyzer):
 
         # Request indexed hopper dispense count
         elif self.cc_Header == 130:
-            return f"Dispensed {self.__get_int()} "
+            return f"Dispensed {self.__get_int(length = self.data[1])} "
 
         # 128 Request money in, 127 Request money out
         elif (self.cc_Header == 128) and (self.cc_Header == 127):
-            return f"Total {self.__get_int()} "
+            return f"Total {self.__get_int(length = self.data[1])} "
 
         elif self.cc_Header == 124:
             return f"Events {self.data[4]} paid {self.__get_int(5, 4)} unpaid {self.__get_int(9, 4)}"
@@ -1359,11 +1389,11 @@ class Hla(HighLevelAnalyzer):
 
         # Request cash box value
         elif self.cc_Header == 117:
-            return f"Value {self.__get_int()} "
+            return f"Value {self.__get_int(length = self.data[1])} "
 
         # Request real time clock
         elif self.cc_Header == 115:
-            return str(datetime.datetime.fromtimestamp(self.__get_int()))
+            return str(datetime.datetime.fromtimestamp(self.__get_int(length = self.data[1])))
 
         # Request USB id
         elif self.cc_Header == 114:
@@ -1412,7 +1442,7 @@ class Hla(HighLevelAnalyzer):
         """
 
         try:
-            if (Hla.address_in_progress == 0) or (Hla.address_in_progress == self.__get_device_address):
+            if (Hla.address_in_progress == 0) or (Hla.address_in_progress == self.device_address):
                 if self.len_data == 0:
                     self.__reset_frame()
 
@@ -1422,8 +1452,8 @@ class Hla(HighLevelAnalyzer):
                 if self.len_data == 1:
                     self.start_time = frame.start_time
                     # Todo MCS header
-                    Hla.address_in_progress = self.__get_device_address
-                    if self.data[0] == self.__get_device_address:  # or (self.data[0] == self.broadcast):
+                    Hla.address_in_progress = self.device_address
+                    if self.data[0] == self.device_address:  # or (self.data[0] == self.broadcast):
                         self.isMaster2Slave = True
                     elif self.isRequest and self.data[0] == 1:
                         self.isMaster2Slave = False
@@ -1476,7 +1506,7 @@ class Hla(HighLevelAnalyzer):
                                                      {"Checksum ": f" {self.data[-1]} {self.verif[check_ok]}"})
                     else:
                         if (self.len_data == 3) and (self.device_category != self.str_bv) and \
-                                (self.data[2] != self.__get_device_address):
+                                (self.data[2] != self.device_address):
                             raise
 
                         if (self.len_data > 4) and (self.len_data == (5 + self.data[1])):

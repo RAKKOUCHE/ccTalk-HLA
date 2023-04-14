@@ -558,17 +558,13 @@ class Hla(HighLevelAnalyzer):
         """
            Réinitialise les variables de l'instance pour une nouvelle trame.
 
-           Cette méthode réinitialise les variables de l'instance qui sont utilisées pour stocker les données d'une trame.
-           Elle est appelée chaque fois qu'une nouvelle trame doit être construite.
+           Cette méthode réinitialise les variables de l'instance qui sont utilisées pour stocker les données d'une
+           trame. Elle est appelée chaque fois qu'une nouvelle trame doit être construite.
 
            Arguments:
            - Aucun
 
-<<<<<<< HEAD
-           Returns
-=======
-           Return :
->>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
+           Returns:
            - Aucun
         """
         self.len_data = 0
@@ -578,78 +574,50 @@ class Hla(HighLevelAnalyzer):
 
     def __get_int(self, index = 4, length = 2):
         """
-            Extrait un entier à partir des données de la trame.
-
             Cette méthode extrait un entier à partir des données de la trame à l'indice spécifié par `index` et d'une
-<<<<<<< HEAD
-            longueur spécifiée par `length`. Les données de la trame sont stockées dans la liste `self.data`. Les
-            entiers dans les trames sont codés sur deux ou quatre octets en fonction de la longueur.
-=======
-            longueur spécifiée par `length`. Les données de la trame sont stockées dans la liste `self.data`. Les entiers
-            dans les trames sont codés sur deux ou quatre octets en fonction de la longueur.
->>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
+            longueur spécifiée par "length". Les données de la trame sont stockées dans la liste "self.data".
+            Les entiers dans les trames sont codés sur deux ou quatre octets en fonction de la longueur.
 
             :param self: Une instance de la classe.
-            :param index: L'indice de départ des octets à extraire dans la liste `self.data`. Par défaut,
-                            l'indice est 4 pour ignorer les octets d'en-tête.
+
+            :param index: L'indice de départ des octets à extraire dans la liste "self.data". Par défaut, l'indice est 4
+                            pour ignorer les octets d'en-tête.
+
             :param length: La longueur en octets de l'entier à extraire. Par défaut, la longueur est 2 pour les entiers
                             codés sur deux octets.
-<<<<<<< HEAD
-            :returns: L'entier extrait à partir des données de la trame.
-=======
+
             :return: L'entier extrait à partir des données de la trame.
->>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
         """
         return sum([self.data[index + i] * (256 ** i) for i in range(length)])
 
     @property
     def __is_a_header(self):
         """
-<<<<<<< HEAD
             Vérifie si le header du message est un header contenu dans le dictionnaire header
 
-            Returns:
-                bool : True si le type de message correspond à un header  contenu dans le dictionnaire header, False
+            Return :
+                bool : True si le type de message correspond à un header contenu dans le dictionnaire header, False
                         sinon.
-=======
-        Vérifie si le header du message est un header contenu dans le dictionnaire header
-
-        Return :
-            bool : True si le type de message correspond à un header  contenu dans le dictionnaire header, False sinon.
->>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
         """
         return self.data[3] in Hla.header
 
     @property
     def __checksum(self):
         """
-<<<<<<< HEAD
             Calculates the checksum of the message.
 
             Returns:
                 int: The checksum value, which is a number between 0 and 255.
-=======
-        Calculates the checksum of the message.
-
-        Returns:
-            int: The checksum value, which is a number between 0 and 255.
->>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
         """
         return (256 - (sum(self.data[0:-1]) % 256)) % 256
 
+    @property
     def __crc_16(self):
         """
-<<<<<<< HEAD
             Calculates the CRC-16 of the message.
 
             Returns:
                 int: The CRC-16 value, which is a number between 0 and 65535.
-=======
-        Calculates the CRC-16 of the message.
-
-        Returns:
-            int: The CRC-16 value, which is a number between 0 and 65535.
->>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
         """
         data_slice = self.data[0:2] + self.data[3:-1]
         crc = 0
@@ -666,17 +634,11 @@ class Hla(HighLevelAnalyzer):
     @property
     def __get_param(self):
         """
-<<<<<<< HEAD
             Get parameters and return them between brackets
 
             Return :
-            str: A string containing the parameters between brackets and an arrow "->" at the end if an interpretation will be displayed
-=======
-        Get parameters and return them between brackets
-
-        Returns:
-        str: A string containing the parameters between brackets and an arrow "->" at the end if an interpretation will be displayed
->>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
+            str: A string containing the parameters between brackets and an arrow "->" at the end if an interpretation
+                    will be displayed
         """
         str_result = str(self.data[4:-1])
         if self.data[1] > 0:
@@ -686,15 +648,9 @@ class Hla(HighLevelAnalyzer):
     @property
     def __get_ascii(self):
         """
-<<<<<<< HEAD
             Convert the bytes in the message to a string of ASCII characters
             Returns:
                 A string of ASCII characters
-=======
-        Convert the bytes in the message to a string of ASCII characters
-        Returns:
-            A string of ASCII characters
->>>>>>> de18b3b5a9f0a0e17e00f8cb5b115fe06f8764cb
         """
         return ''.join(chr(c) for c in self.data[4:-1])
 
@@ -813,10 +769,10 @@ class Hla(HighLevelAnalyzer):
             Get a string that indicates whether the stacker and escrow are being used or not.
 
             Return :
-                str: A string that says "Stacker non used Escrow non used" if both the stacker and escrow are not being
+                str: A string that says "Stacker non-used Escrow non-used" if both the stacker and escrow are not being
                         used,
-                     "Stacker used Escrow non used" if only the stacker is being used,
-                     "Stacker non used Escrow used" if only the escrow is being used, or
+                     "Stacker used Escrow non-used" if only the stacker is being used,
+                     "Stacker non-used Escrow used" if only the escrow is being used, or
                      "Stacker used Escrow used" if both the stacker and escrow are being used.
         """
         use = ('non used', 'used')
@@ -1092,7 +1048,7 @@ class Hla(HighLevelAnalyzer):
 
         # Pay money out
         elif self.cc_Header == - 125:
-            return f"To pay {self.__get_int(length =self.data[1])}"
+            return f"To pay {self.__get_int(length = self.data[1])}"
 
         # Purge hopper
         elif self.cc_Header == 121:

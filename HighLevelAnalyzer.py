@@ -2,6 +2,7 @@
 """ For more information and documentation,
 please go to https://support.saleae.com/extensions/high-level-analyzer-extensions"""
 import datetime
+from unittest import result
 
 from saleae.analyzers import (
     AnalyzerFrame,
@@ -23,163 +24,7 @@ class Hla(HighLevelAnalyzer):
 
     Returns :
         AnalyzerFrame: description de la  trame
-    """
-    # header = {
-    #     255: "Factory set-up and test",
-    #     254: "Simple poll",
-    #     253: "Address poll",
-    #     252: "Address clash",
-    #     251: "Address change",
-    #     250: "Address random",
-    #     249: "Request polling priority",
-    #     248: "Request status",
-    #     247: "Request variable set",
-    #     246: "Request manufacturer id",
-    #     245: "Request equipment category id",
-    #     244: "Request product code",
-    #     243: "Request database version",
-    #     242: "Request serial number",
-    #     241: "Request software revision",
-    #     240: "Test solenoids",
-    #     239: "Operate motors",
-    #     238: "Test output lines",
-    #     237: "Read input lines",
-    #     236: "Read opto states",
-    #     235: "Read DH public key",
-    #     234: "Send DH public key",
-    #     233: "Latch output lines",
-    #     232: "Perform self-check",
-    #     231: "Modify inhibit status",
-    #     230: "Request inhibit status",
-    #     229: "Read buffered credit or error codes",
-    #     228: "Modify master inhibit status",
-    #     227: "Request master inhibit status",
-    #     226: "Request insertion counter",
-    #     225: "Request accept counter",
-    #     224: "Request encrypted product id",
-    #     223: "Modify encrypted inhibit and override registers",
-    #     222: "Modify sorter override status",
-    #     221: "Request sorter override status",
-    #     220: "ACMI encrypted data",
-    #     219: "Enter new PIN number",
-    #     218: "Enter PIN number",
-    #     217: "Request payout high / low status",
-    #     216: "Request data storage availability",
-    #     215: "Read data block",
-    #     214: "Write data block",
-    #     213: "Request option flags",
-    #     212: "Request coin position",
-    #     211: "Power management control",
-    #     210: "Modify sorter paths",
-    #     209: "Request sorter paths",
-    #     208: "Modify payout absolute count",
-    #     207: "Request payout absolute count",
-    #     204: "Meter control",
-    #     203: "Display control",
-    #     202: "Teach mode control ",
-    #     201: "Request teach status",
-    #     200: "ACMI unencrypted product id",
-    #     199: "Configuration to EEPROM",
-    #     198: "Counters to EEPROM",
-    #     197: "Calculate ROM checksum",
-    #     196: "Request creation date",
-    #     195: "Request last modification date",
-    #     194: "Request reject counter",
-    #     193: "Request fraud counter",
-    #     192: "Request build code",
-    #     191: "Keypad control",
-    #     189: "Modify default sorter path",
-    #     188: "Request default sorter path",
-    #     187: "Modify payout capacity",
-    #     186: "Request payout capacity",
-    #     185: "Modify coin id",
-    #     184: "Request coin id",
-    #     183: "Upload window data",
-    #     182: "Download calibration info",
-    #     181: "Modify security setting",
-    #     180: "Request security setting",
-    #     179: "Modify bank select",
-    #     178: "Request bank select",
-    #     177: "Handheld function",
-    #     176: "Request alarm counter",
-    #     175: "Modify payout float",
-    #     174: "Request payout float",
-    #     173: "Request thermistor reading",
-    #     172: "Emergency stop",
-    #     171: "Request hopper coin",
-    #     170: "Request base year",
-    #     169: "Request address mode",
-    #     168: "Request hopper dispense count",
-    #     167: "Dispense hopper coins",
-    #     166: "Request hopper status",
-    #     165: "Modify variable set",
-    #     164: "Enable hopper",
-    #     163: "Test hopper",
-    #     162: "Modify inhibit and override registers",
-    #     161: "Pump RNG",
-    #     160: "Request cipher key",
-    #     159: "Read buffered bill events",
-    #     158: "Modify bill id",
-    #     157: "Request bill id",
-    #     156: "Request country scaling factor",
-    #     155: "Request bill position",
-    #     154: "Route bill",
-    #     153: "Modify bill operating mode",
-    #     152: "Request bill operating mode",
-    #     151: "Test lamps",
-    #     150: "Request individual accept counter",
-    #     149: "Request individual error counter",
-    #     148: "Read opto voltages",
-    #     147: "Perform stacker cycle",
-    #     146: "Operate bi-directional motors",
-    #     145: "Request currency revision",
-    #     144: "Upload bill tables",
-    #     143: "Begin bill table upgrade",
-    #     142: "Finish bill table upgrade",
-    #     141: "Request firmware upgrade capability",
-    #     140: "Upload firmware",
-    #     139: "Begin firmware upgrade",
-    #     138: "Finish firmware upgrade",
-    #     137: "Switch encryption code",
-    #     136: "Store encryption code",
-    #     135: "Set accept limit",
-    #     134: "Dispense hopper value",
-    #     133: "Request hopper polling value",
-    #     132: "Emergency stop value",
-    #     131: "Request hopper coin value",
-    #     130: "Request indexed hopper dispense count",
-    #     129: "Read barcode data",
-    #     128: "Request money in",
-    #     127: "Request money out",
-    #     126: "Clear money counters",
-    #     125: "Pay money out",
-    #     124: "Verify money out",
-    #     123: "Request activity register",
-    #     122: "Request error status",
-    #     121: "Purge hopper",
-    #     120: "Modify hopper balance",
-    #     119: "Request hopper balance",
-    #     118: "Modify cash box value",
-    #     117: "Request cash box value",
-    #     116: "Modify real time clock",
-    #     115: "Request real time clock",
-    #     114: "Request USB id",
-    #     113: "Switch baud rate",
-    #     112: "Read encrypted events",
-    #     111: "Request encryption support",
-    #     110: "Switch encryption key",
-    #     109: "Request encrypted hopper status",
-    #     108: "Request encrypted monetary id",
-    #     107: "Operate escrow",
-    #     106: "Request escrow status",
-    #     105: "Data stream",
-    #     104: "Request service status",
-    #     4: "Request comms revision",
-    #     3: "Clear comms status variables",
-    #     2: "Request comms status variables",
-    #     1: "Reset device",
-    # }
-
+    """   
     header = {
         255: ["Factory set-up and test", 255, 255, ],
         254: ["Simple poll", 0, 0, ],
@@ -330,6 +175,10 @@ class Hla(HighLevelAnalyzer):
         106: ["Request escrow status", 0, 3, ],
         105: ["Data stream", 255, 255, ],
         104: ["Request service status", 1, 255, ],
+        99: ["Request output", 0, 1, ],
+        98: ["Modify output", 1, 0, ],
+        97: ["Request input", 0, 1, ],
+        96: ["Modify delay shutter", 1, 0, ],
         4: ["Request comms revision", 0, 3, ],
         3: ["Clear comms status variables", 0, 0, ],
         2: ["Request comms status variables", 0, 3, ],
@@ -812,16 +661,16 @@ class Hla(HighLevelAnalyzer):
             ReturnS :
                 Une chaine de caractères contenant l'interprétation du message du master
         """
-        # 240 Test solenoid, 239 Operate motors, 238 Test output lines, 233 Latch out lines, 222 Modify sorter
-        # override status
-        if self.cc_Header in (240, 239, 238, 233, 222):
+        # 240 Test solenoid, 239 Operate motors, 238 Test output lines, 233 Latch out lines, 
+        # 222 Modify sorter override status, 98 Modify output
+        if self.cc_Header in (240, 239, 238, 233, 222, 98):
             return self.__get_mask()
 
-        # Modify inhibit status
+        # 231 Modify inhibit status
         elif self.cc_Header == 231:
             return self.__get_mask(length = 2)
 
-        # Modify master inhibit status
+        # 228 Modify master inhibit status
         elif self.cc_Header == 228:
             return self.__master_inhibit
 
@@ -833,49 +682,49 @@ class Hla(HighLevelAnalyzer):
                 str_pin = "Pin [{}][{}][{}][{}]"
             return str_pin.format(self.data[4], self.data[5], self.data[6], self.data[7])
 
-        # Request payout high / low status
+        # 217 Request payout high / low status
         elif (self.cc_Header == 217) and (self.data[1] == 1):
             return f"Hopper no. {self.data[4]}"
 
-        # Read data block
+        # 215 Read data block
         elif self.cc_Header == 215:
             return f"Blk. no. {self.data[4]}"
 
-        # Write data block
+        # 214 Write data block
         elif self.cc_Header == 214:
             return f"Blk. no. {self.data[4]} values {str(self.data[5:-1])} "
 
-        # Request coin position
+        # 212 Request coin position
         elif self.cc_Header == 212:
             return f"coin {self.data[4]}"
 
-        # Power management control
+        # 211 Power management control
         elif self.cc_Header == 211:
             return f"Pow. opt. : {('normal', 'switch to low', 'switch to full', 'shutdown')[self.data[4]]}"
 
-        # Modify sorter paths
+        # 210 Modify sorter paths
         elif self.cc_Header == 210:
             str_result = f"Coin pos.{self.data[4]} Path_1 {self.data[5]} "
             if (self.data[1]) == 5:
                 str_result += f"Path_2 {self.data[6]} Path_3 {self.data[7]} Path_4 {self.data[8]}"
             return str_result
 
-        # Request sorter paths
+        # 209 Request sorter paths
         elif self.cc_Header == 209:
             return f"Coin pos. {self.data[4]}"
 
-        # Modify payout absolute count
+        # 208 Modify payout absolute count
         elif self.cc_Header == 208:
             if self.data[1] == 2:
                 return f"Coins {self.__get_int()}"
             elif self.data[1] == 3:
                 return f"Hopper {self.data[4]} - Coins {self.__get_int(5)}"
 
-        # Request payout absolute count
+        # 207 Request payout absolute count
         elif (self.cc_Header == 207) and (self.data[1] == 1):
             return f"Hopper {self.data[4]}"
 
-        # Meter control
+        # 204 Meter control
         elif self.cc_Header == 204:
             str_result = f"{('Set', 'Inc.', 'Dec.', 'Reset', 'Read')[self.data[4]]} meter"
             if self.data[4] == 0:
@@ -886,43 +735,43 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 203:
             pass
 
-        # Teach mode control
+        # 202 Teach mode control
         elif self.cc_Header == 202:
             str_result = f"Pos. {self.data[4]}"
             if self.data[1] == 2:
                 str_result += f" Orienta. {self.data[5]} "
             return str_result
 
-        # Request teach status
+        # 201 Request teach status
         elif self.cc_Header == 201:
             return ('Default', 'Abort')[self.data[4]]
 
-        # Modify default sorter path
+        # 189 Modify default sorter path
         elif self.cc_Header == 189:
             return f"Def. path {self.data[4]}"
 
-        # Modify payout capacity
+        # 187 Modify payout capacity
         elif self.cc_Header == 187:
             if self.data[1] == 2:
                 return f"Capacity {self.__get_int()}"
             else:
                 return f"Hopper no. {self.data[4]} Capacity {self.__get_int(5)}"
 
-        # Request payout capacity
+        # 186 Request payout capacity
         elif (self.cc_Header == 186) and (self.data[1] == 1):
             return f"Hopper no. {self.data[4]}"
 
-        # Modify coin id
+        # 185 Modify coin id
         elif self.cc_Header == 185:
             return "Coin pos. {} Id. {:c}{:c}_{:c}{:c}{:c}_{:c}".format(self.data[4], self.data[5], self.data[6],
                                                                         self.data[7], self.data[8], self.data[9],
                                                                         self.data[10], )
 
-        # Request coin id
+        # 184 Request coin id
         elif self.cc_Header == 184:
             return f"Pos. {self.data[4]}"
 
-        # Upload window data
+        # 183 Upload window data
         elif self.cc_Header == 183:
             str_op = ("Program coin", "Modif credit code", "Delete coin", "Program token", "Delete token")
             str_result = f"Pos. {self.data[5]} {str_op[self.data[4]]}"
@@ -932,71 +781,71 @@ class Hla(HighLevelAnalyzer):
                 str_result += f" {self.data[6:-1]}"
             return str_result
 
-        # Modify security setting
+        # 181 Modify security setting
         elif self.cc_Header == 181:
             return f"Pos. {self.data[4]} setting {self.data[5]}"
 
-        # Request security setting
+        # 180 Request security setting
         elif self.cc_Header == 180:
             return f"Pos. {self.data[4]}"
 
-        # Modify bank select
+        # 179 Modify bank select
         elif self.cc_Header == 179:
             return f"Bank no. {self.data[4]}"
 
-        # Modify payout float
+        # 175 Modify payout float
         elif self.cc_Header == 175:
             if self.data[1] == 2:
                 return f"float {self.__get_int()}"
             elif self.data[1] == 3:
                 return f"Hopper {self.data[4]} float {self.__get_int(5)}"
 
-        # Request payout float
+        # 174 Request payout float
         elif (self.cc_Header == 174) and (self.data[1] == 1):
             return f"Hopper {self.data[4]}"
 
-        # Dispense hopper coins
+        # 167 Dispense hopper coins
         elif self.cc_Header == 167:
             return f"Secur. code {self.data[4: -2]} no. coins {self.data[-2]}"
 
-        # Enable hopper
+        # 164 Enable hopper
         elif self.cc_Header == 164:
             return f"Payout {('disable', 'enable')[int(self.data[4] == 165)]}"
 
-        # Modify inhibit and override registers
+        # 162 Modify inhibit and override registers
         elif self.cc_Header == 162:
             return f"Current (inh. [{bin(self.data[5])[2:].rjust(8, '0')}/{bin(self.data[4])[2:].rjust(8, '0')}]" \
                    f" overr. sorter [{bin(self.data[6])[2:].rjust(8, '0')}]) - " \
                    f"Next (inh. [{bin(self.data[8])[2:].rjust(8, '0')}/{bin(self.data[7])[2:].rjust(8, '0')}] " \
                    f"overr. sorter [{bin(self.data[9])[2:].rjust(8, '0')}])"
 
-        # Pump RNG
+        # 161 Pump RNG
         elif self.cc_Header == 161:
             return f"RNG : {self.data[4: -1]}"
 
-        # Modify bill id
+        # 158 Modify bill id
         elif self.cc_Header == 158:
             return "Bill pos. {} {:c}{:c}_{:c}{:c}{:c}{:c}_{:c}".format(self.data[4], self.data[5], self.data[6],
                                                                         self.data[7], self.data[8], self.data[9],
                                                                         self.data[10], self.data[11])
 
-        # Request bill id
+        # 157 Request bill id
         elif self.cc_Header == 157:
             return f"Bill type {self.data[4]}"
 
-        # Request country scaling factor
-        elif self.cc_Header in [156, 155]:
+        # 156 Request country scaling factor, 155 Request bill position
+        elif self.cc_Header == [156, 155]:
             return self.__get_country
 
-        # Route bill
+        # 154 Route bill
         elif self.cc_Header == 154:
             return {0: "return bill", 1: "send cash box/stacker", 255: "Extend timeout", }[self.data[4]]
 
-        # Modify bill operating mode
+        # 153 Modify bill operating mode
         elif self.cc_Header == 153:
             return self.__stacker_escrow
 
-        # Test lamps
+        # 151 Test lamps
         elif self.cc_Header == 151:
             if self.data[5] < 3:
                 return f"Lamp {self.data[4]} " \
@@ -1004,19 +853,19 @@ class Hla(HighLevelAnalyzer):
             elif self.data[5] > 9:
                 return f" Lamp {self.data[4]} flash every {self.data[5] * 20} ms"
 
-        # Request individual accept counter
+        # 150 Request individual accept counter
         elif self.cc_Header == 150:
             return f" Type {self.data[4]}"
 
-        #  Request individual error counter
+        # 149 Request individual error counter
         elif self.cc_Header == 149:
             return f" Error type {self.CV_Error_Code[self.data[4]]}"
 
-        # Operate bi-directional motors
+        # 146 Operate bi-directional motors
         elif self.cc_Header == 146:
             return f"Mot. {self.__get_mask()} Dir. {self.__get_mask(5)} Speed {self.data[6]}"
 
-        # Request currency revision
+        # 145 Request currency revision
         elif (self.cc_Header == 145) and (self.data[1] == 2):
             return self.__get_country
 
@@ -1028,16 +877,16 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header in (141, 139) and (self.data[1] == 1):
             return f"Module {self.data[4]} "
 
-        # Switch encryption code
+        # 137 Switch encryption code
         elif self.cc_Header == 137:
             return f"Code [0X{self.data[5]}{self.data[4]}] [0X{self.data[7]}{self.data[6]}] [0X{self.data[9]}\
                     {self.data[8]}]"
 
-        # Set accept_ limit
+        # 135 Set accept limit
         elif self.cc_Header == 135:
             return f"No. coins {self.data[4]}"
 
-        # Dispense hopper value
+        # 134 Dispense hopper value
         elif self.cc_Header == 134:
             return f"Code [0X{self.data[4]}{self.data[5]}] [0X{self.data[6]}{self.data[7]}] [0X{self.data[8]}\
                     {self.data[9]}] [0X{self.data[10]}{self.data[11]}] no. of coins {self.__get_int(12)}"
@@ -1046,43 +895,54 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header in (131, 130):
             return f"No coin {self.data[4]}"
 
-        # Pay money out
+        # 125 Pay money out
         elif self.cc_Header == - 125:
             return f"To pay {self.__get_int(length = self.data[1])}"
 
-        # Purge hopper
+        # 121 Purge hopper
         elif self.cc_Header == 121:
             return f"Hopper {self.data[4]} no {self.data[5]}"
 
-        # Modify hopper balance
+        # 120 Modify hopper balance
         elif self.cc_Header == 120:
             return f"Hopper {self.data[4]} no {self.__get_int(5)}"
 
-        # Request hopper balance
+        # 119 Request hopper balance
         elif self.cc_Header == 119:
             return f"Hopper {self.data[4]}"
 
-        # Modify cash box value
+        # 118 Modify cash box value
         elif self.cc_Header == 118:
             return f"Cash box value {self.__get_int(length = self.data[1])}"
 
-        # Modify real time clock
+        # 116 Modify real time clock
         elif self.cc_Header == 116:
             return str(datetime.datetime.fromtimestamp(self.__get_int(length = self.data[1])))
 
-        # Switch baud rate
+        # 113 Switch baud rate
         elif self.cc_Header == 113:
             baud_rate_op = ("baud rate in use", "switch baud rate", "maximum baud rate supported",
                             "support for new baud rate",)
             return f"Op. {baud_rate_op[self.data[4]]} {self.baud_rate_code[self.data[5]]}"
 
-        # Operate escrow
+        # 107 Operate escrow
         elif self.cc_Header == 107:
             return ('Div. accept', 'Div. return')[self.data[4]]
 
-        # Request service status
+        # 104 Request service status
         elif self.cc_Header == 104:
             return ('Report', 'Clear')[self.data[4]]
+        
+        # 96 Modify delay shutter
+        elif self.cc_Header == 96:
+            if self.data[4] == 1:
+                result = 3
+            elif self.data[4] == 2:
+                result = 15
+            else: 
+                result = self.data[4] * 2
+            return f"Delay {result} s."
+       
         else:
             return ""
 
@@ -1094,7 +954,7 @@ class Hla(HighLevelAnalyzer):
         Returns :
             Une chaine de caractères contenant l'interprétation du message du périphérique
         """
-        # Request polling priority
+        # 249 Request polling priority
         if self.cc_Header == 249:
             units = {1: 'ms', 3: 'sec.', 4: 'min.', 5: 'hours', 6: 'day', 7: 'weeks', 8: 'month', 9: 'years'}
             if self.data[4] == 0:
@@ -1104,11 +964,11 @@ class Hla(HighLevelAnalyzer):
             else:
                 return f"{self.data[4]} {units[self.data[5]]}"
 
-        # Request status
+        # 248 Request status
         elif self.cc_Header == 248:
             return f"{('Status OK', 'Return activated', 'C.O.S.')[self.data[4]]}"
 
-        # Request variable set
+        # 247 Request variable set
         elif self.cc_Header == 247:
             if self.device_category == self.str_bv:
                 return f"No. bill types {self.data[4]} No. banks {self.data[5]}"
@@ -1121,20 +981,21 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header in (246, 245, 244, 241, 171, 145, 129) and (self.data[1] > 0):
             return self.__get_ascii
 
-        # Request database version
+        # 243 Request database version
         elif self.cc_Header == 243:
             return f"Data base {self.data[4]}"
 
-        # Request serial number
+        # 242 Request serial number
         elif self.cc_Header == 242:
             return f"S.N. {self.__get_int(length = self.data[1])} "
 
         # 237 Read input lines, 236 Read opto states, 221 Request sorter override status,
-        # 217 Request payout high / low status, 169 Request address mode
-        elif self.cc_Header in (237, 236, 221, 217, 169):
+        # 217 Request payout high / low status, 169 Request address mode, 
+        # 99 Request 2IB output, 97 Request 2IB imput
+        elif self.cc_Header in (237, 236, 221, 217, 169, 99, 97):
             return self.__get_mask()
 
-        # Perform self-check
+        # 232 Perform self-check
         elif self.cc_Header == 232:
             str_result = f"fault {self.fault_code[self.data[4]]}"
             if self.data[1] == 2:
@@ -1146,15 +1007,15 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header in (230, 212, 155, 123):
             return self.__get_mask(length = 2)
 
-        # Read buffered credit or error codes
+        # 229 Read buffered credit or error codes
         elif self.cc_Header == 229:
             return self.__decode_buffer_cv
 
-        # Request master inhibit status
+        # 227 Request master inhibit status
         elif self.cc_Header == 227:
             return self.__master_inhibit
 
-        # Request insertion counter
+        # 226 Request insertion counter
         elif self.cc_Header == 226:
             return f"Insert counter {self.__get_int(length = self.data[1])}"
 
@@ -1162,39 +1023,39 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header in (225, 150):
             return f"Accept counter {self.__get_int(length = self.data[1])}"
 
-        # Request data storage availability
+        # 216 Request data storage availability
         elif self.cc_Header == 216:
             return f"{('vola. L.O.R', 'vol. L.O.P.D', 'perm. limited', 'perm. unlimited')[self.data[4]]} " \
                    f"[rd blocks {self.data[5]} | rd bytes/block {self.data[6]}] " \
                    f"[wr blocks {self.data[7]} | wr bytes/block {self.data[8]}]"
 
-        # Read data block
+        # 215 Read data block
         elif self.cc_Header == 215:
             return f"Values {self.data[4:-1]}"
 
-        # Request option flags
+        # 213 Request option flags
         elif self.cc_Header == 213:
             if self.device_category == self.str_cv:
                 return f"Code format {('Coin pos.', 'CVF')[self.data[4] & 1]}"
             else:
                 return self.__get_mask()
 
-        # Request sorter paths
+        # 209 Request sorter paths
         elif self.cc_Header == 209:
             str_result = f"Path 1 {self.data[4]}"
             if self.data[1] == 4:
                 str_result += f" Path 2 {self.data[5]} Path 3 {self.data[6]} Path 4 {self.data[7]}"
             return str_result
 
-        # Request payout absolute count
+        # 207 Request payout absolute count
         elif self.cc_Header == 207:
             return f"Coins {self.__get_int()}"
 
-        # Meter control
+        # 204 Meter control
         elif (self.cc_Header == 204) and (self.data[1] > 0):
             return f"Meter {self.__get_int(length = self.data[1])}"
 
-        # Request payout absolute count
+        # 201 Request payout absolute count
         elif self.cc_Header == 201:
             teach_status_code = {
                 252: "aborted",
@@ -1204,7 +1065,7 @@ class Hla(HighLevelAnalyzer):
             }
             return f"# Coins {self.data[4]} Status {teach_status_code[self.data[5]]}"
 
-        # Calculate ROM checksum
+        # 197 Calculate ROM checksum
         elif self.cc_Header == 197:
             return f"Chk_1 {self.data[4]} Chk_2 {self.data[5]} Chk_3 {self.data[6]} Chk_4 {self.data[7]}"
 
@@ -1212,27 +1073,27 @@ class Hla(HighLevelAnalyzer):
         elif (self.cc_Header == 196) or (self.cc_Header == 195):
             return self.__decode_date
 
-        # Request reject counter
+        # 194 Request reject counter
         elif self.cc_Header == 194:
             return f"Rej. counter {self.__get_int(length = 3)}"
 
-        # Request fraud counter
+        # 193 Request fraud counter
         elif self.cc_Header == 193:
             return f"Fraud. counter {self.__get_int(length = 3)}"
 
-        # Request build code
+        # 192 Request build code
         elif self.cc_Header == 192:
             return f"Build {self.__get_ascii}"
 
-        # Request default sorter path
+        # 188 Request default sorter path
         elif self.cc_Header == 188:
             return f"Def. path {self.data[4]}"
 
-        # Request payout capacity
+        # 186 Request payout capacity
         elif self.cc_Header == 186:
             return f"No. coins {self.__get_int()}"
 
-        # Request coin id
+        # 184 Request coin id
         elif self.cc_Header == 184:
             i = 4
             while i < 10:
@@ -1242,56 +1103,56 @@ class Hla(HighLevelAnalyzer):
             return "{:c}{:c}_{:c}{:c}{:c}_{:c}".format(self.data[4], self.data[5], self.data[6], self.data[7],
                                                        self.data[8], self.data[9])
 
-        # Download calibration info
+        # 182 Download calibration info
         elif self.cc_Header == 182:
             return f"Calib. info. {self.data[4:-1]}"
 
-        # Request security setting
+        # 180 Request security setting
         elif self.cc_Header == 180:
             return f"Setting {self.data[4]}"
 
-        # Request bank select
+        # 178 Request bank select
         elif self.cc_Header == 178:
             return f"Bank select {self.data[4]}"
 
-        # Request alarm counter
+        # 176 Request alarm counter
         elif self.cc_Header == 176:
             return f"Alarm count {self.data[4]}"
 
-        # Request payout float
+        # 174 Request payout float
         elif self.cc_Header == 174:
             return f"No. coins {self.__get_int()}"
 
-        # Request thermistor reading
+        # 173 Request thermistor reading
         elif self.cc_Header == 173:
             if (self.data[4] and 128) == 128:
                 return f"Temp. -{self.data[4]}"
             else:
                 return f"Temp. {self.data[4]}"
 
-        # Emergency stop
+        # 172 Emergency stop
         elif self.cc_Header == 172:
             return f"Remaining {self.data[4]}"
 
-        # Request base year
+        # 170 Request base year
         elif self.cc_Header == 170:
             self.base_year = int(chr(self.data[4]) + chr(self.data[5]) + chr(self.data[6]) + chr(self.data[7]))
             return f"Base year {self.base_year}"
 
-        # Request hopper dispense count
+        # 168 Request hopper dispense count
         elif self.cc_Header == 168:
             return f"Dispensed {self.__get_int(length = self.data[1])}"
 
-        # Dispense hopper coins
+        # 167 Dispense hopper coins
         elif (self.cc_Header == 167) and (self.data[1] > 0):
             return f"Event count. {self.data[4]}"
 
-        # Request hopper status
+        # 166 Request hopper status
         elif self.cc_Header == 166:
             return f"Events {self.data[4]} Remaining {self.data[5]} Last paid {self.data[6]} " \
                    f"Last unpaid {self.data[7]}"
 
-        # Test hopper
+        # 163 Test hopper
         elif self.cc_Header == 163:
             i = 0
             str_result = ""
@@ -1300,36 +1161,36 @@ class Hla(HighLevelAnalyzer):
                 i += 1
             return str_result
 
-        # Request cipher key
+        # 160 Request cipher key
         elif self.cc_Header == 160:
             return f"Key : {self.data[4:-1]}"
 
-        # Read buffered bill events
+        # 159 Read buffered bill events
         elif self.cc_Header == 159:
             return self.__decode_buffer_bill
 
-        # Request bill id
+        # 157 Request bill id
         elif self.cc_Header == 157:
             return "Id. {:c}{:c}_{:c}{:c}{:c}{:c}_{:c}".format(self.data[4], self.data[5], self.data[6], self.data[7],
                                                                self.data[8], self.data[9], self.data[10])
 
-        # Request country scaling factor
+        # 156 Request country scaling factor
         elif self.cc_Header == 156:
             return f"Scaling factor {self.__get_int()} decimal {self.data[6]}"
 
-        # Route bill
+        # 154 Route bill
         elif (self.cc_Header == 154) and (self.data[1] == 1):
             return self.error_code[self.data[4]]
 
-        # Request bill operating mode
+        # 152 Request bill operating mode
         elif self.cc_Header == 152:
             return self.__stacker_escrow
 
-        # Request individual error counter
+        # 149 Request individual error counter
         elif self.cc_Header == 149:
             return " Error counter : {} ".format(self.__get_int(length = self.data[1]))
 
-        # Read opto voltages
+        # 148 Read opto voltages
         elif self.cc_Header == 148:
             str_result = " Opto voltages {}"
             if self.data[1] == 1:
@@ -1337,24 +1198,24 @@ class Hla(HighLevelAnalyzer):
             else:
                 return str_result.format(self.__get_int())
 
-        # Perform stacker cycle
+        # 147 Perform stacker cycle
         elif (self.cc_Header == 147) and (self.data[1] == 1):
             return f"Error {self.error_code_stacker[self.data[4]]}"
 
-        # Request firmware upgrade capability
+        # 141 Request firmware upgrade capability
         elif self.cc_Header == 141:
             return f"FW option {self.data[4]}"
 
-        # Dispense hopper value
+        # 134 Dispense hopper value
         elif (self.cc_Header == 134) and (self.data[1] == 1):
             return f"Events {self.data[4]}"
 
-        # Request hopper polling value
+        # 133 Request hopper polling value
         elif self.cc_Header == 133:
             return f"Events {self.data[4]} remain. {self.__get_int(5)} paid {self.__get_int(7)} " \
                    f"unpaid {self.__get_int(9)} "
 
-        # Emergency stop value
+        # 132 Emergency stop value
         elif self.cc_Header == 132:
             return f"remain. {self.__get_int()}"
 
@@ -1363,7 +1224,7 @@ class Hla(HighLevelAnalyzer):
             return "Id. {:c}{:c}{:c}{:c}{:c}{:c}{}".format(self.data[4], self.data[5], self.data[6], self.data[7],
                                                            self.data[8], self.data[9], self.__get_int(10))
 
-        # Request indexed hopper dispense count
+        # 130 Request indexed hopper dispense count
         elif self.cc_Header == 130:
             return f"Dispensed {self.__get_int(length = self.data[1])} "
 
@@ -1374,7 +1235,7 @@ class Hla(HighLevelAnalyzer):
         elif self.cc_Header == 124:
             return f"Events {self.data[4]} paid {self.__get_int(5, 4)} unpaid {self.__get_int(9, 4)}"
 
-        # Request error status
+        # 122 Request error status
         elif self.cc_Header == 122:
             device = {100: "Coin acceptor", 250: "Cash box", 255: "System"}
             fault_code_status = {
@@ -1402,23 +1263,23 @@ class Hla(HighLevelAnalyzer):
                 str_device = device[self.data[4]]
             return f"{str_device} {fault_code_status[self.data[5]]}"
 
-        # Request cash box value
+        # 117 Request cash box value
         elif self.cc_Header == 117:
             return f"Value {self.__get_int(length = self.data[1])} "
 
-        # Request real time clock
+        # 115 Request real time clock
         elif self.cc_Header == 115:
             return str(datetime.datetime.fromtimestamp(self.__get_int(length = self.data[1])))
 
-        # Request USB id
+        # 114 Request USB id
         elif self.cc_Header == 114:
             return f"VID_{self.__get_int()} PID_{self.__get_int(6)}"
 
-        # Switch baud rate
+        # 113 Switch baud rate
         elif (self.cc_Header == 113) and (self.data[1] == 1):
             return f"Speed {self.baud_rate_code[self.data[4]]}"
 
-        # Request escrow status
+        # 106 Request escrow status
         elif self.cc_Header == 106:
             str_result = f"Op. status {('idle', 'operating', 'fault condition',)[self.data[4]]}"
             if self.data[5] == 0:
@@ -1428,19 +1289,19 @@ class Hla(HighLevelAnalyzer):
             str_result += f"fault code {self.data[6]}"
             return str_result
 
-        # Request service status
+        # 104 Request service status
         elif (self.cc_Header == 104) and (self.data[1] == 1):
             service_status = ('none', 'servicing recommended', 'servicing overdue',)
             return f"Service status {service_status[self.data[4]]}"
-
-        # Request comm revision
+                  
+        # 4 Request comm revision
         elif self.cc_Header == 4:
             if (self.data[4]) > 47:
                 return "Release {:c} v{:c}.{:c}".format(self.data[4], self.data[5], self.data[6])
             else:
                 return "Release {} v{}.{}".format(self.data[4], self.data[5], self.data[6])
 
-        # Request comm status variables
+        # 2 Request comm status variables
         elif self.cc_Header == 2:
             return f"RX : timeouts {self.data[4]}, bytes ignored {self.data[5]}, bad checksum {self.data[6]}"
 
@@ -1501,10 +1362,10 @@ class Hla(HighLevelAnalyzer):
                                 check_ok = (check_result == self.data[2] + (self.data[-1] * 256))
                                 if (not check_ok) and (not self.__is_a_header):
                                     raise
-                                return AnalyzerFrame(f"{self.device_category}({self.data[0]}) -"
-                                                     f" # param.({self.data[1]}) - "
-                                                     f"LSB CRC({self.data[2]}) - {str_header}({self.data[3]}) - "
-                                                     f"param.{self.__get_param}{self.__master2slave} - "
+                                return AnalyzerFrame(f"{self.device_category}({self.data[0]}) , "
+                                                     f" # param.({self.data[1]}) , "
+                                                     f"LSB CRC({self.data[2]}) - {str_header}({self.data[3]}) , "
+                                                     f"param.{self.__get_param}{self.__master2slave} , "
                                                      f"MSB CRC({self.data[-1]}) ", self.start_time, frame.end_time,
                                                      {"Checksum ": f" {self.data[2] + (self.data[-1] * 256)} "
                                                                    f"{self.verif[check_ok]}"})
@@ -1513,9 +1374,9 @@ class Hla(HighLevelAnalyzer):
                                 check_ok = (check_result == self.data[-1])
                                 if (not check_ok) and (not self.__is_a_header):
                                     raise
-                                return AnalyzerFrame(f"{self.device_category}({self.data[0]}) - "
-                                                     f"# param.({self.data[1]}) - "
-                                                     f"Master({self.data[2]}) - {str_header}({self.data[3]}) - param. "
+                                return AnalyzerFrame(f"{self.device_category}({self.data[0]}) , "
+                                                     f"# param.({self.data[1]}) , "
+                                                     f"Master({self.data[2]}) , {str_header}({self.data[3]}) , param. "
                                                      f"{self.__get_param}{self.__master2slave} ", self.start_time,
                                                      frame.end_time,
                                                      {"Checksum ": f" {self.data[-1]} {self.verif[check_ok]}"})
@@ -1531,10 +1392,10 @@ class Hla(HighLevelAnalyzer):
                                 check_result = self.__crc_16
                                 check_ok = (check_result == self.data[2] + (self.data[-1] * 256))
 
-                                return AnalyzerFrame(f"Master({self.data[0]}) - # param.({self.data[1]}) - "
-                                                     f"LSB CRC({self.data[2]}) - {self.acknowledge[self.data[3]]}"
-                                                     f"({self.data[3]}) - "
-                                                     f"param. {self.__get_param}{self.__slave2master} - "
+                                return AnalyzerFrame(f"Master({self.data[0]}) , # param.({self.data[1]}) , "
+                                                     f"LSB CRC({self.data[2]}) , {self.acknowledge[self.data[3]]}"
+                                                     f"({self.data[3]}) , "
+                                                     f"param. {self.__get_param}{self.__slave2master} , "
                                                      f"MSB CRC({self.data[-1]}) ",
                                                      self.start_time, frame.end_time,
                                                      {"Checksum ": f" {self.data[2] + self.data[-1] * 256} "
@@ -1542,9 +1403,9 @@ class Hla(HighLevelAnalyzer):
                             else:
                                 check_result = self.__checksum
                                 check_ok = (check_result == self.data[- 1])
-                                return AnalyzerFrame(f"Master({self.data[0]}) - # param.({self.data[1]}) - "
-                                                     f"{self.device_category}({self.data[2]}) - "
-                                                     f"{self.acknowledge[self.data[3]]}({self.data[3]}) - param. "
+                                return AnalyzerFrame(f"Master({self.data[0]}) , # param.({self.data[1]}) , "
+                                                     f"{self.device_category}({self.data[2]}) , "
+                                                     f"{self.acknowledge[self.data[3]]}({self.data[3]}) , param. "
                                                      f"{self.__get_param}{self.__slave2master} ",
                                                      self.start_time, frame.end_time,
                                                      {"Checksum ": f" {self.data[-1]} {self.verif[check_ok]}"})

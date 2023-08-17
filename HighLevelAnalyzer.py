@@ -24,7 +24,7 @@ class Hla(HighLevelAnalyzer):
 
     Returns :
         AnalyzerFrame: description de la  trame
-    """   
+    """
     header = {
         255: ["Factory set-up and test", 255, 255, ],
         254: ["Simple poll", 0, 0, ],
@@ -370,8 +370,10 @@ class Hla(HighLevelAnalyzer):
     str_cv = "Coin validator[chk 8]"
     str_payout = "Payout[chk 8]"
     str_bv = "Bill acceptor[CRC-16]"
+    str_io_board = "IO board[chk 8]"
 
-    device_category = ChoicesSetting(label = "Slave device category", choices = (str_cv, str_payout, str_bv))
+    device_category = ChoicesSetting(label = "Slave device category", choices = (str_cv, str_payout, str_bv,
+                                                                                 str_io_board))
 
     address_in_progress = 0
 
@@ -489,10 +491,10 @@ class Hla(HighLevelAnalyzer):
             str: A string containing the parameters between brackets and an arrow "->" at the end if an interpretation
                     will be displayed
         """
-        str_result = str(self.data[4:-1])
-        if self.data[1] > 0:
-            str_result += "->"
-        return str_result + " "
+        params = self.data[4:-1]
+        param_str = ' ->' if self.data[1] > 0 else ''
+        str_result = f"[{' '.join(map(str, params))}]{param_str}"
+        return str_result
 
     @property
     def __get_ascii(self):
@@ -932,17 +934,17 @@ class Hla(HighLevelAnalyzer):
         # 104 Request service status
         elif self.cc_Header == 104:
             return ('Report', 'Clear')[self.data[4]]
-        
+
         # 96 Modify delay shutter
         elif self.cc_Header == 96:
             if self.data[4] == 1:
                 result = 3
             elif self.data[4] == 2:
                 result = 15
-            else: 
+            else:
                 result = self.data[4] * 2
             return f"Delay {result} s."
-       
+
         else:
             return ""
 
@@ -1293,7 +1295,7 @@ class Hla(HighLevelAnalyzer):
         elif (self.cc_Header == 104) and (self.data[1] == 1):
             service_status = ('none', 'servicing recommended', 'servicing overdue',)
             return f"Service status {service_status[self.data[4]]}"
-                  
+
         # 4 Request comm revision
         elif self.cc_Header == 4:
             if (self.data[4]) > 47:
